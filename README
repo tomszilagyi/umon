@@ -1,0 +1,59 @@
+uMon - primitive RRDtool-based host monitoring
+==============================================
+
+
+install dependencies:
+# pkg_add rrdtool socat
+
+create a directory for rrd files:
+# mkdir /var/umon
+# chown tom:tom /var/umon
+
+create a directory for webpage artifacts:
+# mkdir /var/www/htdocs/umon
+# chown tom:tom /var/www/htdocs/umon
+
+configure httpd by adding this to httpd.conf:
+
+# uMon - rrdtool-based monitoring
+server "default" {
+    listen on * port 8888
+    root "/htdocs/umon"
+    location "/index.html" {
+        fastcgi socket tcp 127.0.0.1 3333
+    }
+}
+
+# rcctl reload httpd
+
+
+configure and enable snmpd:
+# cp /etc/examples/snmpd.conf /etc/
+# echo "listen on 127.0.0.1 snmpv2c" >> /etc/snmpd.conf
+# echo "read-only community public" >> /etc/snmpd.conf
+# rcctl enable snmpd
+# rcctl start snmpd
+
+verify that snmp queries work, output should be something similar to below:
+$ snmp walk -v 2c -c public localhost ifDescr
+ifDescr.1 = STRING: em0
+ifDescr.2 = STRING: enc0
+ifDescr.3 = STRING: lo0
+ifDescr.4 = STRING: pflog0
+
+TODO configure the plugins (based on above interfaces, plus more)
+
+run the sample.sh script and observe that it creates RRD databases without errors:
+$ ./sample.sh
+Creating /var/umon/load-localhost.rrd
+Creating /var/umon/cpu-localhost.rrd
+Creating /var/umon/if-localhost-1.rrd
+Creating /var/umon/if-localhost-3.rrd
+
+create a crontab entry for running sample.sh every 5 minutes:
+$ crontab -l
+...
+*/5     *       *       *       *       /path/to/umon/sample.sh 2>&1 >/dev/null
+
+run the fastcgi server script:
+socat TCP4-LISTEN:3333,bind=127.0.0.1,reuseaddr,fork EXEC:./fcgi.sh
