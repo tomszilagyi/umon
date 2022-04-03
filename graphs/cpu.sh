@@ -5,19 +5,25 @@ cd $(dirname $0)/..
 
 inst=cpu
 
+[ -z $1 ] || TIMESPAN=$1
+# This needs to come after graph-related input parameters are set:
+. ./graph.conf
+
+echo $0: TIMESPAN=${TIMESPAN} >&2
+
 state=./probes/cpu/$inst.env
 if [ ! -f $state ]
 then
-    echo "state not found, expected: ${state}"
-    echo "Has the probe run yet?"
+    echo "state not found, expected: ${state}" >&2
+    echo "Has the probe run yet?" >&2
     exit 1
 fi
 
 RRDFILE="${RRDFILES}/${inst}.rrd"
 if ! test -f "${RRDFILE}"
 then
-    echo "RRD not found, expected: ${RRDFILE}"
-    echo "Has the probe run yet?"
+    echo "RRD not found, expected: ${RRDFILE}" >&2
+    echo "Has the probe run yet?" >&2
     exit 1
 fi
 
@@ -39,9 +45,7 @@ while [ $j -lt ${nCores} ]; do
     j=$((j + 1))
 done
 
-IMAGE="${IMAGES}/cpu.png"
-
-exec ${RRDTOOL} graph ${IMAGE} ${RRD_GRAPH_ARGS} \
+exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --title "CPU Usage" \
         --vertical-label "% Utilisation" \
         --watermark "${WATERMARK}" \

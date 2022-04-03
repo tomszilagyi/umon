@@ -14,6 +14,7 @@ shift
 
 #echo $0: inst=$inst interface=$interface
 . ./umon.conf
+. ./probes/probes.env
 
 oid_ifdescr=.1.3.6.1.2.1.31.1.1.1.1
 oid_rxbytes=.1.3.6.1.2.1.31.1.1.1.6
@@ -24,31 +25,14 @@ oid_txpkts=.1.3.6.1.2.1.31.1.1.1.11
 state=./probes/if/$inst.env
 if [ ! -f ${state} ]
 then
-    case $(uname -s) in
-        Linux)
-            snmpget="snmpget -O n"
-            snmpwalk="snmpwalk -O n"
-            ;;
-        OpenBSD)
-            snmpget="snmp get -O n"
-            snmpwalk="snmp walk -O n"
-            ;;
-        *)
-            echo "Unsupported platform: $(uname -s)"
-            exit 1
-            ;;
-    esac
-
     ifIndex=$(${snmpwalk} ${SNMP_COMMON_ARGS} ${oid_ifdescr} | \
                   grep ${interface} | cut -d= -f1 | cut -d. -f13)
     [ -z $ifIndex ] && exit 1
 
-    echo "snmpget=\"${snmpget}\"" >> $state
-    echo "snmpwalk=\"${snmpwalk}\"" >> $state
     echo "ifIndex=$ifIndex" >> $state
 fi
 
-. $state
+. ${state}
 
 rxbytes=$(${snmpget} ${SNMP_COMMON_ARGS} \
                      ${oid_rxbytes}.${ifIndex} | cut -d: -f2 | tr -d ' ')

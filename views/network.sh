@@ -30,10 +30,10 @@ probe() {
 
     case "${name}" in
         "if")
+            echo "<p><img src=\"/graph/${name}-pkts${params}/${TIMESPAN}\"></p>"
             echo "<p><img src=\"/graph/${name}-xfer${params}/${TIMESPAN}\"></p>"
             ;;
         *)
-            echo "<p><img src=\"/graph/${name}${params}/${TIMESPAN}\"></p>"
             ;;
     esac
 }

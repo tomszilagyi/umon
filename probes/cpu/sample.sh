@@ -3,35 +3,19 @@
 inst=$1
 shift
 
-echo $0: inst=$inst
+#echo $0: inst=$inst
 . ./umon.conf
+. ./probes/probes.env
 
 oid_procload=.1.3.6.1.2.1.25.3.3.1.2
 
 state=./probes/cpu/$inst.env
 if [ ! -f ${state} ]
 then
-    case $(uname -s) in
-        Linux)
-            snmpget="snmpget -O n"
-            snmpwalk="snmpwalk -O n"
-            ;;
-        OpenBSD)
-            snmpget="snmp get -O n"
-            snmpwalk="snmp walk -O n"
-            ;;
-        *)
-            echo "Unsupported platform: $(uname -s)"
-            exit 1
-            ;;
-    esac
-
     nCores=$(${snmpwalk} ${SNMP_COMMON_ARGS} ${oid_procload} | \
                  wc -l | tr -d ' ')
     [ ${nCores} -eq 0 ] && exit 1
 
-    echo "snmpget=\"${snmpget}\"" >> $state
-    echo "snmpwalk=\"${snmpwalk}\"" >> $state
     echo "nCores=$nCores" >> $state
 fi
 

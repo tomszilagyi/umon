@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -34,6 +35,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+const std::vector <std::string> timespans =
+{
+   "1h", "3h", "6h", "12h",
+   "1d", "2d", "7d", "14d",
+   "30d", "90d", "182d", "365d",
+};
+
+const std::string timespan_default = "2d";
+
+const std::unordered_map <std::string, std::string> ctypes =
+{
+   {"css",      "text/css"},
+   {"ico",      "image/x-icon"},
+   {"jpeg",     "image/jpeg"},
+   {"jpg",      "image/jpeg"},
+   {"js",       "application/javascript"},
+   {"png",      "image/png"},
+   {"txt",      "text/plain"},
+};
+
+const std::string ctype_default = "application/octet-stream";
 
 constexpr const size_t bufsize = FCGI_HEADER_LEN + 256 + 65536;
 char buf [bufsize];
@@ -141,14 +164,14 @@ emit_end_request ()
    std::cout.flush ();
 }
 
-void error_page ()
+void error_page (const std::string& status)
 {
-   // TODO this should be a real http error, not a successfully served html page
    std::ostringstream output;
-   output << "<h2>404 Not found</h2>";
+   output << "<h2>" << status << "</h2>";
 
    std::ostringstream header;
-   header << "Content-type: text/html\r\n"
+   header << "Status: " << status << "\r\n"
+          << "Content-type: text/html\r\n"
           << "Content-length: " << output.str ().length () << "\r\n";
 
    using namespace std::literals;
@@ -164,20 +187,143 @@ void error_page ()
    exit (0);
 }
 
+void error_400 ()
+{
+   error_page ("400 Bad Request");
+}
+
+void error_404 ()
+{
+   error_page ("404 Not Found");
+}
+
+void
+view_header (std::ostringstream& output,
+             const std::vector <std::string>& views,
+             const std::string& view, const std::string& timespan)
+{
+   char hostname [255];
+   if (gethostname (hostname, sizeof (hostname)) < 0)
+      return;
+
+   output << R"raw(<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="/style.css">
+<title>)raw";
+   output << hostname << ":" << view << "/" << timespan << " | uMon";
+   output << R"raw(</title>
+<script>
+function onMenu ()
+{
+   var form = document.forms ["menu"];
+   var view = form ["view"].value;
+   var timespan = form ["timespan"].value;
+   window.location.href = "/view/" + view + "/" + timespan;
+}
+</script>
+</head>
+
+<body>
+
+<div id="nav">
+<form id="menu" action="javascript:;" onsubmit="onMenu(this)">
+   <label for="view">View:</label>
+   <select id="view" name="view">
+)raw";
+
+   for (const auto& v: views)
+   {
+      output << "      <option value=\"" << v << "\"";
+      if (v == view)
+         output << " selected";
+      output << ">" << v << "</option>\n";
+   }
+
+   output << R"raw(   </select>
+   <label for="timespan">last</label>
+   <select id="timespan" name="timespan">
+)raw";
+
+   for (const auto& t: timespans)
+   {
+      output << "      <option value=\"" << t << "\"";
+      if (t == timespan)
+         output << " selected";
+      output << ">" << t << "</option>\n";
+   }
+
+   output << R"raw(   </select>
+   <input type="submit" value="Go">
+</form>
+</div>
+)raw";
+}
+
+void
+view_footer (std::ostringstream& output)
+{
+   output << R"raw(
+</body>
+</html>
+)raw";
+}
+
+std::vector <std::string>
+get_views ()
+{
+   namespace fs = std::filesystem;
+
+   std::vector <std::string> vs;
+
+   std::string path = "./views/";
+   for (const auto & entry : fs::directory_iterator (path))
+   {
+      auto s = entry.path ().string ().substr (path.size ());
+      if (s.size () > 3 && s.substr (s.size () - 3) == ".sh")
+         vs.push_back (s.substr (0, s.size () - 3));
+   }
+   return vs;
+}
+
 void
 process_view (const std::string& view)
 {
-   std::cerr << "processing view: " << view << std::endl;
-   // TODO sanitize that view contains only approved chars
-   // before we pass it to exec
-   std::ostringstream output;
-   std::string argv0 = view + ".sh";
-   std::string path = "./views/" + argv0;
-   char* argv [] = {(char*)argv0.c_str (), nullptr};
-   if (child (path.c_str (), argv, nullptr, output))
-      error_page ();
+   std::cerr << "process_view: '" << view << "'" << std::endl;
 
-   // TODO post-process output (add header with timespan selector, etc.)
+   std::vector <std::string> ps;
+   split (view, ps, '/');
+
+   auto views = get_views ();
+   {
+      auto it = std::find (views.begin (), views.end (), ps [0]);
+      if (it == views.end ())
+         error_400 ();
+   }
+
+   std::string timespan = timespan_default;
+   if (ps.size () > 1)
+   {
+      auto it = std::find (timespans.begin (), timespans.end (), ps [1]);
+      if (it != timespans.end ())
+         timespan = *it;
+      ps [1] = timespan;
+   }
+   else
+      ps.push_back (timespan);
+
+   std::ostringstream output;
+   std::string argv0 = ps [0] + ".sh";
+   std::string path = "./views/" + argv0;
+   std::vector <char*> argv;
+   argv.push_back ((char*)argv0.c_str ());
+   for (int k = 1; k < ps.size (); ++k)
+      argv.push_back ((char*)ps [k].c_str ());
+   argv.push_back (nullptr);
+   view_header (output, views, ps [0], timespan);
+   if (child (path.c_str (), argv.data (), nullptr, output))
+      error_400 ();
+   view_footer (output);
 
    std::ostringstream header;
    header << "Content-type: text/html\r\n"
@@ -199,44 +345,74 @@ process_view (const std::string& view)
 void
 process_graph (const std::string& graph)
 {
-   std::cerr << "processing graph: " << graph << std::endl;
+   std::cerr << "process_graph: '" << graph << "'" << std::endl;
 
    std::vector <std::string> ps;
    split (graph, ps, '/');
 
    std::ostringstream output;
    std::string argv0 = ps [0] + ".sh";
-   std::string prog_path = "./graphs/" + argv0;
+   std::string path = "./graphs/" + argv0;
    std::vector <char*> argv;
    argv.push_back ((char*)argv0.c_str ());
    for (int k = 1; k < ps.size (); ++k)
       argv.push_back ((char*)ps [k].c_str ());
    argv.push_back (nullptr);
-   if (child (prog_path.c_str (), argv.data (), nullptr, output))
-      error_page ();
-   std::cerr << output.str () << std::endl;
+   if (child (path.c_str (), argv.data (), nullptr, output))
+      error_400 ();
+   std::cerr << "output read: " << output.str ().size () << std::endl;
 
-   std::ostringstream image_path;
-   image_path << "./images/" << ps [0];
-   for (int k = 1; k < ps.size (); ++k)
-      image_path << "-" << ps [k];
-   image_path << ".png";
-   std::cerr << "image path: " << image_path.str () << std::endl;
+   std::ostringstream header;
+   header << "Content-type: image/png\r\n"
+          << "Content-length: " << output.str ().size () << "\r\n";
 
-   std::ifstream file (image_path.str (), std::ios::binary | std::ios::ate);
+   using namespace std::literals;
+   const auto now = std::chrono::system_clock::now ();
+   header << "X-Generated-In: " << (now - request_start_time) / 1us << " us";
+   header << "\r\n\r\n";
+
+   emit_stdout (header.str ());
+   emit_stdout (output.str ());
+   emit_stdout ("");
+   emit_end_request ();
+
+   exit (0);
+}
+
+void
+serve_static (const std::string& uri)
+{
+   std::cerr << "serve_static: uri='" << uri << "'" << std::endl;
+
+   std::string path = "./static_assets" + uri;
+   std::cerr << "path: " << path << std::endl;
+
+   std::ifstream file (path, std::ios::binary | std::ios::ate);
    if (!file.good ())
-      error_page ();
+      error_404 ();
 
-   std::streamsize size = file.tellg();
+   std::streamsize size = file.tellg ();
    file.seekg (0, std::ios::beg);
 
    std::vector <char> buffer (size);
-   if (!file.read (buffer.data(), size))
-      error_page ();
+   if (!file.read (buffer.data (), size))
+      error_400 ();
 
    std::cerr << "file data read: " << size << std::endl;
+
+   std::vector <std::string> ps;
+   split (uri, ps, '.');
+
+   std::string ctype = ctype_default;
+   if (ps.size () > 1)
+   {
+      auto it = ctypes.find (ps [ps.size () - 1]);
+      if (it != ctypes.end ())
+         ctype = it->second;
+   }
+
    std::ostringstream header;
-   header << "Content-type: image/png\r\n"
+   header << "Content-type: " << ctype << "\r\n"
           << "Content-length: " << size << "\r\n";
 
    using namespace std::literals;
@@ -258,10 +434,11 @@ process_request ()
    if (!has_params || !has_input)
       return;
 
-   const auto& uri = params ["DOCUMENT_URI"];
+   const auto& uri_ = params ["DOCUMENT_URI"];
+   const auto& uri = (uri_ == "/") ? "/view/main" : uri_;
    const auto& query = params ["QUERY_STRING"];
-   std::cerr << "process request:" << " uri='" << uri << "' q='" << query
-             << "'" << std::endl;
+   std::cerr << "process_request: uri='" << uri << "' q='" << query << "'"
+             << std::endl;
 
    if (uri.find ("/view/") == 0)
    {
@@ -273,8 +450,8 @@ process_request ()
       const auto& graph = uri.substr (std::string ("/graph/").length ());
       process_graph (graph);
    }
-
-   error_page ();
+   else
+      serve_static (uri);
 }
 
 void

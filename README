@@ -42,6 +42,9 @@ configure and enable snmpd:
 # rcctl enable snmpd
 # rcctl start snmpd
 
+Note: you are free (and encouraged) to use a different community string.
+Please set SNMP_COMMUNITY in umon.conf accordingly if you do so.
+
 verify that snmp queries work, output should be something similar to below:
 $ snmp walk -v 2c -c public localhost ifDescr
 ifDescr.1 = STRING: em0

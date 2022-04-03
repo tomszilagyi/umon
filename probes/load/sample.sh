@@ -3,8 +3,9 @@
 inst=$1
 shift
 
-echo $0: inst=$inst
+#echo $0: inst=$inst
 . ./umon.conf
+. ./probes/probes.env
 
 # N.B: take care, this must work alike on all supported platforms:
 load=$(uptime | grep -o average.\* | cut -d: -f 2- | tr -d ',')

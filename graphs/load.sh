@@ -5,17 +5,21 @@ cd $(dirname $0)/..
 
 inst=load
 
+[ -z $1 ] || TIMESPAN=$1
+# This needs to come after graph-related input parameters are set:
+. ./graph.conf
+
+echo $0: TIMESPAN=${TIMESPAN} >&2
+
 RRDFILE="${RRDFILES}/${inst}.rrd"
 if ! test -f "${RRDFILE}"
 then
-    echo "RRD not found, expected: ${RRDFILE}"
-    echo "Has the probe run yet?"
+    echo "RRD not found, expected: ${RRDFILE}" >&2
+    echo "Has the probe run yet?" >&2
     exit 1
 fi
 
-IMAGE="${IMAGES}/load.png"
-
-exec ${RRDTOOL} graph ${IMAGE} ${RRD_GRAPH_ARGS} \
+exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --title "Load averages" \
         --vertical-label "Load average" \
         --watermark "${WATERMARK}" \
