@@ -3,7 +3,7 @@
 cd $(dirname $0)/..
 . ./umon.conf
 
-[ -z $1 ] || TIMESPAN=$1
+[ -z "$1" ] || TIMESPAN="$1"
 # This needs to come after graph-related input parameters are set:
 . ./graph.conf
 

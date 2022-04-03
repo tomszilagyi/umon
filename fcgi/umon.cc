@@ -36,11 +36,21 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-const std::vector <std::string> timespans =
-{
-   "1h", "3h", "6h", "12h",
-   "1d", "2d", "7d", "14d",
-   "30d", "90d", "182d", "365d",
+const std::vector <std::pair <std::string, std::string>> timespans =
+{  // url-component & RRDtool param -> drop-down visible selector
+   {"1h",       "1 hour"},
+   {"3h",       "3 hours"},
+   {"6h",       "6 hours"},
+   {"12h",      "12 hours"},
+   {"24h",      "24 hours"},
+   {"2d",       "2 days"},
+   {"7d",       "7 days"},
+   {"14d",      "14 days"},
+   {"1mon",     "1 month"},
+   {"3mon",     "3 months"},
+   {"6mon",     "6 months"},
+   {"1y",       "1 year"},
+   {"2y",       "2 years"},
 };
 
 const std::string timespan_default = "2d";
@@ -245,12 +255,12 @@ function onMenu ()
    <select id="timespan" name="timespan">
 )raw";
 
-   for (const auto& t: timespans)
+   for (const auto& tp: timespans)
    {
-      output << "      <option value=\"" << t << "\"";
-      if (t == timespan)
+      output << "      <option value=\"" << tp.first << "\"";
+      if (tp.first == timespan)
          output << " selected";
-      output << ">" << t << "</option>\n";
+      output << ">" << tp.second << "</option>\n";
    }
 
    output << R"raw(   </select>
@@ -304,10 +314,13 @@ process_view (const std::string& view)
    std::string timespan = timespan_default;
    if (ps.size () > 1)
    {
-      auto it = std::find (timespans.begin (), timespans.end (), ps [1]);
-      if (it != timespans.end ())
-         timespan = *it;
-      ps [1] = timespan;
+      auto it = std::find_if (timespans.begin (), timespans.end (),
+                              [&] (const auto& p)
+                              {
+                                 return p.first == ps [1];
+                              });
+      if (it == timespans.end ())
+         ps [1] = timespan;
    }
    else
       ps.push_back (timespan);
@@ -320,7 +333,7 @@ process_view (const std::string& view)
    for (int k = 1; k < ps.size (); ++k)
       argv.push_back ((char*)ps [k].c_str ());
    argv.push_back (nullptr);
-   view_header (output, views, ps [0], timespan);
+   view_header (output, views, ps [0], ps [1]);
    if (child (path.c_str (), argv.data (), nullptr, output))
       error_400 ();
    view_footer (output);

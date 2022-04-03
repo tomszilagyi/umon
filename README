@@ -62,15 +62,16 @@ configure the plugins by editing probes.conf
 
 run probes/sample.sh and observe that it creates RRD databases without errors:
 $ probes/sample.sh
+Creating directory for RRD files: db
 Creating db/load.rrd
 Creating db/cpu.rrd
-Creating db/if-lo.rrd
 Creating db/if-ens3.rrd
+Creating db/if-lo.rrd
 
-create a crontab entry for running sample.sh every 5 minutes:
+create a crontab entry for running sample.sh every minute:
 $ crontab -l
 ...
-*/5     *       *       *       *       /path/to/umon/probes/sample.sh 2>&1 >/dev/null
+*       *       *       *       *       /path/to/umon/probes/sample.sh 2>&1 >/dev/null
 
 
 compile the fastcgi server:
