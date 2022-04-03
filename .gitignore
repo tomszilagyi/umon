@@ -1,0 +1,4 @@
+db/
+images/
+umon_fcgi
+probes/*/*.env

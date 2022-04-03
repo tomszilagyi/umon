@@ -5,26 +5,34 @@ uMon - primitive RRDtool-based host monitoring
 install dependencies:
 # pkg_add rrdtool socat
 
-create a directory for rrd files:
-# mkdir /var/umon
-# chown tom:tom /var/umon
-
-create a directory for webpage artifacts:
-# mkdir /var/www/htdocs/umon
-# chown tom:tom /var/www/htdocs/umon
 
 configure httpd by adding this to httpd.conf:
 
 # uMon - rrdtool-based monitoring
 server "default" {
     listen on * port 8888
-    root "/htdocs/umon"
-    location "/index.html" {
+    location "/*" {
         fastcgi socket tcp 127.0.0.1 3333
     }
 }
 
 # rcctl reload httpd
+
+The equivalent minimal config for Nginx is:
+
+server {
+    fastcgi_param  CONTENT_LENGTH     $content_length;
+    fastcgi_param  CONTENT_TYPE       $content_type;
+    fastcgi_param  DOCUMENT_URI       $document_uri;
+    fastcgi_param  QUERY_STRING       $query_string;
+    fastcgi_param  REQUEST_METHOD     $request_method;
+    fastcgi_param  REQUEST_URI        $request_uri;
+
+    listen 8888;
+    location / {
+        fastcgi_pass 127.0.0.1:3333;
+    }
+}
 
 
 configure and enable snmpd:
@@ -41,19 +49,44 @@ ifDescr.2 = STRING: enc0
 ifDescr.3 = STRING: lo0
 ifDescr.4 = STRING: pflog0
 
-TODO configure the plugins (based on above interfaces, plus more)
 
-run the sample.sh script and observe that it creates RRD databases without errors:
-$ ./sample.sh
-Creating /var/umon/load-localhost.rrd
-Creating /var/umon/cpu-localhost.rrd
-Creating /var/umon/if-localhost-1.rrd
-Creating /var/umon/if-localhost-3.rrd
+configure database location and RRD settings by editing umon.conf
+(should be fine as is)
+
+
+configure the plugins by editing probes.conf
+
+
+run probes/sample.sh and observe that it creates RRD databases without errors:
+$ probes/sample.sh
+Creating db/load.rrd
+Creating db/cpu.rrd
+Creating db/if-lo.rrd
+Creating db/if-ens3.rrd
 
 create a crontab entry for running sample.sh every 5 minutes:
 $ crontab -l
 ...
-*/5     *       *       *       *       /path/to/umon/sample.sh 2>&1 >/dev/null
+*/5     *       *       *       *       /path/to/umon/probes/sample.sh 2>&1 >/dev/null
 
-run the fastcgi server script:
-socat TCP4-LISTEN:3333,bind=127.0.0.1,reuseaddr,fork EXEC:./fcgi.sh
+
+compile the fastcgi server:
+fcgi/make.sh
+
+run the fastcgi server:
+fcgi/run.sh
+
+
+navigate your browser to http://localhost:8888
+
+
+## Notes on configuring SNMP
+
+On OpenBSD: see above
+
+On Linux running Net-SNMP:
+- run download-mibs as root
+- edit /etc/snmp/snmp.conf and uncomment the line saying 'mibs :'
+- edit /etc/snmp/snmpd.conf and open up access to OIDs by adding a line such as:
+  view   systemonly  included   .1.3.6
+- sudo systemctl restart snmpd
