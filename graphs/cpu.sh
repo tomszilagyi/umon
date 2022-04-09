@@ -32,7 +32,7 @@ fi
 SPEC=
 j=0
 while [ $j -lt ${nCores} ]; do
-    color_idx=$(((j + 1) % ${N_STACK_COLORS}))
+    color_idx=$((j % ${N_STACK_COLORS} + 1))
     color=$(echo ${STACK_COLORS} | cut -d: -f${color_idx})
     SPEC="${SPEC} \
           DEF:CPU$j=${RRDFILE}:cpu$j:AVERAGE \
