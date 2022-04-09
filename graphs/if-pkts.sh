@@ -34,14 +34,14 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         DEF:IN=${RRDFILE}:rxpkts:AVERAGE \
         DEF:OUT=${RRDFILE}:txpkts:AVERAGE \
         CDEF:IN_NEG="IN,-1,*" \
-        LINE2:OUT#00AA00:"Out (TX)" \
-        AREA:OUT#00AA0040 \
-        GPRINT:OUT:MAX:"Max\:%5.1lf %s" \
-        GPRINT:OUT:AVERAGE:"Average\:%5.1lf %s" \
-        GPRINT:OUT:LAST:" Current\:%5.1lf %s\n" \
+        LINE:OUT#00A000:"Out (TX)" \
+        AREA:OUT#00A00050 \
+        GPRINT:OUT:MAX:"Max\:%6.1lf%s" \
+        GPRINT:OUT:AVERAGE:"Average\:%6.1lf%s" \
+        GPRINT:OUT:LAST:" Current\:%6.1lf%s\n" \
         HRULE:0#808080 \
-        LINE2:IN_NEG#0000CC:" In (RX)" \
-        AREA:IN_NEG#0000CC40 \
-        GPRINT:IN:MAX:"Max\:%5.1lf %s" \
-        GPRINT:IN:AVERAGE:"Average\:%5.1lf %s" \
-        GPRINT:IN:LAST:" Current\:%5.1lf %s\n"
+        LINE:IN_NEG#0000C0:" In (RX)" \
+        AREA:IN_NEG#0000C050 \
+        GPRINT:IN:MAX:"Max\:%6.1lf%s" \
+        GPRINT:IN:AVERAGE:"Average\:%6.1lf%s" \
+        GPRINT:IN:LAST:" Current\:%6.1lf%s\n"

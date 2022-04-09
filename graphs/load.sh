@@ -28,16 +28,16 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         DEF:AVG15=${RRDFILE}:avg15:AVERAGE \
         LINE3:AVG15#0000ff:"15m" \
         AREA:AVG15#ffff8020 \
-        GPRINT:AVG15:MAX:"Max\:%5.1lf %s" \
-        GPRINT:AVG15:AVERAGE:"Average\:%5.1lf %s" \
-        GPRINT:AVG15:LAST:" Current\:%5.1lf %s\n" \
+        GPRINT:AVG15:MAX:"Max\:%5.2lf" \
+        GPRINT:AVG15:AVERAGE:"Average\:%5.2lf" \
+        GPRINT:AVG15:LAST:" Current\:%5.2lf\n" \
         LINE2:AVG5#aa00cc:" 5m" \
         AREA:AVG5#ffff8020 \
-        GPRINT:AVG5:MAX:"Max\:%5.1lf %s" \
-        GPRINT:AVG5:AVERAGE:"Average\:%5.1lf %s" \
-        GPRINT:AVG5:LAST:" Current\:%5.1lf %s\n" \
+        GPRINT:AVG5:MAX:"Max\:%5.2lf" \
+        GPRINT:AVG5:AVERAGE:"Average\:%5.2lf" \
+        GPRINT:AVG5:LAST:" Current\:%5.2lf\n" \
         LINE:AVG1#ff0000:" 1m" \
         AREA:AVG1#ffff8020 \
-        GPRINT:AVG1:MAX:"Max\:%5.1lf %s" \
-        GPRINT:AVG1:AVERAGE:"Average\:%5.1lf %s" \
-        GPRINT:AVG1:LAST:" Current\:%5.1lf %s\n"
+        GPRINT:AVG1:MAX:"Max\:%5.2lf" \
+        GPRINT:AVG1:AVERAGE:"Average\:%5.2lf" \
+        GPRINT:AVG1:LAST:" Current\:%5.2lf\n"

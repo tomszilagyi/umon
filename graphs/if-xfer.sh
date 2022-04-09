@@ -36,14 +36,14 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         CDEF:IN_CDEF="IN,8,*" \
         CDEF:IN_CDEFGR="IN,-8,*" \
         CDEF:OUT_CDEF="OUT,8,*" \
-        LINE2:OUT_CDEF#00AA00:"Out (TX)" \
-        AREA:OUT_CDEF#00AA0040 \
-        GPRINT:OUT_CDEF:MAX:"Max\:%5.1lf %s" \
-        GPRINT:OUT_CDEF:AVERAGE:"Average\:%5.1lf %s" \
-        GPRINT:OUT_CDEF:LAST:" Current\:%5.1lf %s\n" \
+        LINE:OUT_CDEF#00A000:"Out (TX)" \
+        AREA:OUT_CDEF#00A00050 \
+        GPRINT:OUT_CDEF:MAX:"Max\:%6.1lf%s" \
+        GPRINT:OUT_CDEF:AVERAGE:"Average\:%6.1lf%s" \
+        GPRINT:OUT_CDEF:LAST:" Current\:%6.1lf%s\n" \
         HRULE:0#808080 \
-        LINE2:IN_CDEFGR#0000CC:" In (RX)" \
-        AREA:IN_CDEFGR#0000CC40 \
-        GPRINT:IN_CDEF:MAX:"Max\:%5.1lf %s" \
-        GPRINT:IN_CDEF:AVERAGE:"Average\:%5.1lf %s" \
-        GPRINT:IN_CDEF:LAST:" Current\:%5.1lf %s\n"
+        LINE:IN_CDEFGR#0000C0:" In (RX)" \
+        AREA:IN_CDEFGR#0000C050 \
+        GPRINT:IN_CDEF:MAX:"Max\:%6.1lf%s" \
+        GPRINT:IN_CDEF:AVERAGE:"Average\:%6.1lf%s" \
+        GPRINT:IN_CDEF:LAST:" Current\:%6.1lf%s\n"

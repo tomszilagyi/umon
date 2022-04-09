@@ -38,9 +38,9 @@ while [ $j -lt ${nCores} ]; do
           DEF:CPU$j=${RRDFILE}:cpu$j:AVERAGE \
           AREA:CPU$j#${color}40:STACK \
           LINE:0#${color}:CPU$j:STACK \
-          GPRINT:CPU$j:MAX:Max\:%5.2lf%s \
-          GPRINT:CPU$j:AVERAGE:Average\:%5.2lf%s \
-          GPRINT:CPU$j:LAST:Current\:%5.2lf%s\n \
+          GPRINT:CPU$j:MAX:Max\:%6.2lf \
+          GPRINT:CPU$j:AVERAGE:Average\:%6.2lf \
+          GPRINT:CPU$j:LAST:Current\:%6.2lf\n \
          "
     j=$((j + 1))
 done
