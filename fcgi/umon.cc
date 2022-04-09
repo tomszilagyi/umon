@@ -16,11 +16,11 @@
 
 #include "child.h"
 #include "fcgi.h"
+#include "utils.h"
 
 #include <algorithm>
 #include <chrono>
 #include <ctime>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -208,9 +208,9 @@ void error_404 ()
 }
 
 void
-view_header (std::ostringstream& output,
-             const std::vector <std::string>& views,
-             const std::string& view, const std::string& timespan)
+write_view_header (std::ostringstream& output,
+                   const std::vector <std::string>& views,
+                   const std::string& view, const std::string& timespan)
 {
    char hostname [255];
    if (gethostname (hostname, sizeof (hostname)) < 0)
@@ -271,7 +271,7 @@ function onMenu ()
 }
 
 void
-view_footer (std::ostringstream& output)
+write_view_footer (std::ostringstream& output)
 {
    output << R"raw(
 </body>
@@ -286,13 +286,17 @@ get_views ()
 
    std::vector <std::string> vs;
 
-   std::string path = "./views/";
-   for (const auto & entry : fs::directory_iterator (path))
+   std::ifstream conffile ("./view.conf", std::ios::binary);
+
+   while (conffile.good ())
    {
-      auto s = entry.path ().string ().substr (path.size ());
-      if (s.size () > 3 && s.substr (s.size () - 3) == ".sh")
-         vs.push_back (s.substr (0, s.size () - 3));
+      std::string line;
+      std::getline (conffile, line);
+      trim_right (trim_left (line));
+      if (line.size () && line [0] != '#')
+         vs.push_back (line);
    }
+
    return vs;
 }
 
@@ -333,10 +337,10 @@ process_view (const std::string& view)
    for (int k = 1; k < ps.size (); ++k)
       argv.push_back ((char*)ps [k].c_str ());
    argv.push_back (nullptr);
-   view_header (output, views, ps [0], ps [1]);
+   write_view_header (output, views, ps [0], ps [1]);
    if (child (path.c_str (), argv.data (), nullptr, output))
       error_400 ();
-   view_footer (output);
+   write_view_footer (output);
 
    std::ostringstream header;
    header << "Content-type: text/html\r\n"

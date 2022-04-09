@@ -81,6 +81,9 @@ run the fastcgi server:
 fcgi/run.sh
 
 
+configure the views you want to access by editing view.conf
+
+
 navigate your browser to http://localhost:8888
 
 
