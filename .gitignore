@@ -1,4 +1,5 @@
 db/
-umon_fcgi
 probes/*.env
 probes/*/*.env
+probes.conf
+view.conf

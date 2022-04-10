@@ -31,19 +31,21 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --title "Transfer on ${interface}" \
         --vertical-label "Bits per Second" \
         --watermark "${WATERMARK}" \
+        --tabwidth 60 \
+        COMMENT:"\t  Maximum   Average  Current\n" \
         DEF:IN=${RRDFILE}:rxbytes:AVERAGE \
         DEF:OUT=${RRDFILE}:txbytes:AVERAGE \
         CDEF:IN_CDEF="IN,8,*" \
         CDEF:IN_CDEFGR="IN,-8,*" \
         CDEF:OUT_CDEF="OUT,8,*" \
-        LINE:OUT_CDEF#00A000:"Out (TX)" \
+        LINE:OUT_CDEF#00A000:"Out (TX)\t" \
         AREA:OUT_CDEF#00A00050 \
-        GPRINT:OUT_CDEF:MAX:"Max\:%6.1lf%s" \
-        GPRINT:OUT_CDEF:AVERAGE:"Average\:%6.1lf%s" \
-        GPRINT:OUT_CDEF:LAST:" Current\:%6.1lf%s\n" \
+        GPRINT:OUT_CDEF:MAX:"%6.1lf%s" \
+        GPRINT:OUT_CDEF:AVERAGE:"%6.1lf%s" \
+        GPRINT:OUT_CDEF:LAST:"%6.1lf%s\n" \
         HRULE:0#808080 \
-        LINE:IN_CDEFGR#0000C0:" In (RX)" \
+        LINE:IN_CDEFGR#0000C0:" In (RX)\t" \
         AREA:IN_CDEFGR#0000C050 \
-        GPRINT:IN_CDEF:MAX:"Max\:%6.1lf%s" \
-        GPRINT:IN_CDEF:AVERAGE:"Average\:%6.1lf%s" \
-        GPRINT:IN_CDEF:LAST:" Current\:%6.1lf%s\n"
+        GPRINT:IN_CDEF:MAX:"%6.1lf%s" \
+        GPRINT:IN_CDEF:AVERAGE:"%6.1lf%s" \
+        GPRINT:IN_CDEF:LAST:"%6.1lf%s\n"

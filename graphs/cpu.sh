@@ -37,10 +37,10 @@ while [ $j -lt ${nCores} ]; do
     SPEC="${SPEC} \
           DEF:CPU$j=${RRDFILE}:cpu$j:AVERAGE \
           AREA:CPU$j#${color}40:STACK \
-          LINE:0#${color}:CPU$j:STACK \
-          GPRINT:CPU$j:MAX:Max\:%6.2lf \
-          GPRINT:CPU$j:AVERAGE:Average\:%6.2lf \
-          GPRINT:CPU$j:LAST:Current\:%6.2lf\n \
+          LINE:0#${color}:CPU$j\t:STACK \
+          GPRINT:CPU$j:MAX:%6.1lf \
+          GPRINT:CPU$j:AVERAGE:%6.1lf \
+          GPRINT:CPU$j:LAST:%6.1lf\n \
          "
     j=$((j + 1))
 done
@@ -50,4 +50,6 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --vertical-label "% Utilisation" \
         --watermark "${WATERMARK}" \
         --legend-direction=bottomup \
-        ${SPEC}
+        --tabwidth 60 \
+        ${SPEC} \
+        "COMMENT:\t Maximum  Average Current\n"

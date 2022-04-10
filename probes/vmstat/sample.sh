@@ -27,13 +27,13 @@ case $(uname -s) in
 
         # Event counters
         pf=$(get "page faults")
-        pins=$(get "pagein operations")
+        pi=$(get "pagein operations")
         syscalls=$(get "syscalls")
         ints=$(get "interrupts")
         cs=$(get "cpu context switches")
         forks=$(get "forks")
 
-        counters="pf pins syscalls ints cs forks"
+        counters="pf pi syscalls ints cs forks"
         ;;
     Linux)
         # Gauges
@@ -83,6 +83,17 @@ if [ ! -f ${state} ]
 then
     echo "gauges=\"${gauges}\"" >> ${state}
     echo "counters=\"${counters}\"" >> ${state}
+    # Set up labels for the graph (defaults to variable name)
+    cat <<EOF >> ${state}
+
+label_pf="page_faults"
+label_pi="pageins"
+label_po="pageouts"
+label_si="swapins"
+label_so="swapouts"
+label_ints="interrupts"
+label_cs="ctx_switches"
+EOF
 fi
 
 RRDFILE="${RRDFILES}/${inst}.rrd"

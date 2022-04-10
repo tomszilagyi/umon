@@ -31,17 +31,19 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --title "Packets on ${interface}" \
         --vertical-label "Packets per Second" \
         --watermark "${WATERMARK}" \
+        --tabwidth 60 \
+        COMMENT:"\t  Maximum  Average  Current\n" \
         DEF:IN=${RRDFILE}:rxpkts:AVERAGE \
         DEF:OUT=${RRDFILE}:txpkts:AVERAGE \
         CDEF:IN_NEG="IN,-1,*" \
-        LINE:OUT#00A000:"Out (TX)" \
+        LINE:OUT#00A000:"Out (TX)\t" \
         AREA:OUT#00A00050 \
-        GPRINT:OUT:MAX:"Max\:%6.1lf%s" \
-        GPRINT:OUT:AVERAGE:"Average\:%6.1lf%s" \
-        GPRINT:OUT:LAST:" Current\:%6.1lf%s\n" \
+        GPRINT:OUT:MAX:"%6.1lf%s" \
+        GPRINT:OUT:AVERAGE:"%6.1lf%s" \
+        GPRINT:OUT:LAST:"%6.1lf%s\n" \
         HRULE:0#808080 \
-        LINE:IN_NEG#0000C0:" In (RX)" \
+        LINE:IN_NEG#0000C0:" In (RX)\t" \
         AREA:IN_NEG#0000C050 \
-        GPRINT:IN:MAX:"Max\:%6.1lf%s" \
-        GPRINT:IN:AVERAGE:"Average\:%6.1lf%s" \
-        GPRINT:IN:LAST:" Current\:%6.1lf%s\n"
+        GPRINT:IN:MAX:"%6.1lf%s" \
+        GPRINT:IN:AVERAGE:"%6.1lf%s" \
+        GPRINT:IN:LAST:"%6.1lf%s\n"

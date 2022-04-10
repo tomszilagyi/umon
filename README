@@ -57,7 +57,8 @@ configure database location and RRD settings by editing umon.conf
 (should be fine as is)
 
 
-configure the plugins by editing probes.conf
+configure the plugins by copying probes.conf.example to probes.conf
+and editing it
 
 
 run probes/sample.sh and observe that it creates RRD databases without errors:
@@ -81,7 +82,8 @@ run the fastcgi server:
 fcgi/run.sh
 
 
-configure the views you want to access by editing view.conf
+configure the views you want to access by copying view.conf.example to
+view.conf and editing it
 
 
 navigate your browser to http://localhost:8888

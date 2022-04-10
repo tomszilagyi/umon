@@ -36,14 +36,16 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --vertical-label "Swap (bytes)" \
         --watermark "${WATERMARK}" \
         --base 1024 --lower-limit 0 \
+        --tabwidth 60 \
+        COMMENT:"\t   Maximum    Average   Current\n" \
         DEF:total=${RRDFILE}:total_swap:AVERAGE \
-        LINE2:total#${color1}:"total" \
-        GPRINT:total:MAX:"Max\:%6.2lf%sB" \
-        GPRINT:total:AVERAGE:"Average\:%6.2lf%sB" \
-        GPRINT:total:LAST:"Current\:%6.2lf%sB\n" \
+        LINE2:total#${color1}:"total\t" \
+        GPRINT:total:MAX:"%6.2lf%sB" \
+        GPRINT:total:AVERAGE:"%6.2lf%sB" \
+        GPRINT:total:LAST:"%6.2lf%sB\n" \
         DEF:used=${RRDFILE}:used_swap:AVERAGE \
         AREA:used#${color2}40 \
-        LINE:used#${color2}:"used " \
-        GPRINT:used:MAX:"Max\:%6.2lf%sB" \
-        GPRINT:used:AVERAGE:"Average\:%6.2lf%sB" \
-        GPRINT:used:LAST:"Current\:%6.2lf%sB\n"
+        LINE:used#${color2}:"used\t" \
+        GPRINT:used:MAX:"%6.2lf%sB" \
+        GPRINT:used:AVERAGE:"%6.2lf%sB" \
+        GPRINT:used:LAST:"%6.2lf%sB\n"

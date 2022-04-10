@@ -8,6 +8,3 @@ probe df
 
 probe if ens3
 probe if lo
-
-#probe if em0
-#probe if lo0

@@ -38,27 +38,29 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --vertical-label "Memory (bytes)" \
         --watermark "${WATERMARK}" \
         --base 1024 --lower-limit 0 \
+        --tabwidth 60 \
+        COMMENT:"\t   Maximum    Average   Current\n" \
         DEF:total=${RRDFILE}:total_memory:AVERAGE \
-        LINE2:total#${color1}:"total   " \
-        GPRINT:total:MAX:"Max\:%6.2lf%sB" \
-        GPRINT:total:AVERAGE:"Average\:%6.2lf%sB" \
-        GPRINT:total:LAST:"Current\:%6.2lf%sB\n" \
+        LINE2:total#${color1}:"total\t" \
+        GPRINT:total:MAX:"%6.2lf%sB" \
+        GPRINT:total:AVERAGE:"%6.2lf%sB" \
+        GPRINT:total:LAST:"%6.2lf%sB\n" \
         DEF:free=${RRDFILE}:free_memory:AVERAGE \
         CDEF:free_neg=free,-1,* \
         AREA:free_neg#${color2}40:STACK \
-        LINE:0#${color2}:"free    ":STACK \
-        GPRINT:free:MAX:"Max\:%6.2lf%sB" \
-        GPRINT:free:AVERAGE:"Average\:%6.2lf%sB" \
-        GPRINT:free:LAST:"Current\:%6.2lf%sB\n" \
+        LINE:0#${color2}:"free\t":STACK \
+        GPRINT:free:MAX:"%6.2lf%sB" \
+        GPRINT:free:AVERAGE:"%6.2lf%sB" \
+        GPRINT:free:LAST:"%6.2lf%sB\n" \
         DEF:active=${RRDFILE}:active_memory:AVERAGE \
         AREA:active#${color3}40 \
-        LINE:active#${color3}:"active  " \
-        GPRINT:active:MAX:"Max\:%6.2lf%sB" \
-        GPRINT:active:AVERAGE:"Average\:%6.2lf%sB" \
-        GPRINT:active:LAST:"Current\:%6.2lf%sB\n" \
+        LINE:active#${color3}:"active\t" \
+        GPRINT:active:MAX:"%6.2lf%sB" \
+        GPRINT:active:AVERAGE:"%6.2lf%sB" \
+        GPRINT:active:LAST:"%6.2lf%sB\n" \
         DEF:inactive=${RRDFILE}:inactive_memory:AVERAGE \
         AREA:inactive#${color4}40:STACK \
-        LINE:0#${color4}:"inactive":STACK \
-        GPRINT:inactive:MAX:"Max\:%6.2lf%sB" \
-        GPRINT:inactive:AVERAGE:"Average\:%6.2lf%sB" \
-        GPRINT:inactive:LAST:"Current\:%6.2lf%sB\n"
+        LINE:0#${color4}:"inactive\t":STACK \
+        GPRINT:inactive:MAX:"%6.2lf%sB" \
+        GPRINT:inactive:AVERAGE:"%6.2lf%sB" \
+        GPRINT:inactive:LAST:"%6.2lf%sB\n"
