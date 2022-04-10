@@ -36,6 +36,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// Uncomment the next line to get copious debug traces on stderr:
+//#define DEBUG
+#ifdef DEBUG
+   #define logT      std::cerr
+#else
+   #define logT      false && std::cerr
+#endif // DEBUG
+
 const std::vector <std::pair <std::string, std::string>> timespans =
 {  // url-component & RRDtool param -> drop-down visible selector
    {"1h",       "1 hour"},
@@ -122,13 +130,13 @@ begin_request (FCGI_BeginRequest* req)
    request_start_time = std::chrono::system_clock::now ();
 
    uint16_t role = req->body.roleHi << 8 | req->body.roleLo;
-   std::cerr << "begin_request: role=" << role
-             << " flags=" << (int)req->body.flags
-             << std::endl;
+   logT << "begin_request: role=" << role
+        << " flags=" << (int)req->body.flags
+        << std::endl;
 
    if (role != FCGI_RESPONDER)
    {
-      fprintf (stderr, "Unsupported FCGI role %d\n", role);
+      std::cerr << "Unsupported FCGI role " << role << std::endl;
       exit (1);
    }
 
@@ -303,7 +311,7 @@ get_views ()
 void
 process_view (const std::string& view)
 {
-   std::cerr << "process_view: '" << view << "'" << std::endl;
+   logT << "process_view: '" << view << "'" << std::endl;
 
    std::vector <std::string> ps;
    split (view, ps, '/');
@@ -362,7 +370,7 @@ process_view (const std::string& view)
 void
 process_graph (const std::string& graph)
 {
-   std::cerr << "process_graph: '" << graph << "'" << std::endl;
+   logT << "process_graph: '" << graph << "'" << std::endl;
 
    std::vector <std::string> ps;
    split (graph, ps, '/');
@@ -377,7 +385,7 @@ process_graph (const std::string& graph)
    argv.push_back (nullptr);
    if (child (path.c_str (), argv.data (), nullptr, output))
       error_400 ();
-   std::cerr << "output read: " << output.str ().size () << std::endl;
+   logT << "output read: " << output.str ().size () << std::endl;
 
    std::ostringstream header;
    header << "Content-type: image/png\r\n"
@@ -399,10 +407,10 @@ process_graph (const std::string& graph)
 void
 serve_static (const std::string& uri)
 {
-   std::cerr << "serve_static: uri='" << uri << "'" << std::endl;
+   logT << "serve_static: uri='" << uri << "'" << std::endl;
 
    std::string path = "./static_assets" + uri;
-   std::cerr << "path: " << path << std::endl;
+   logT << "path: " << path << std::endl;
 
    std::ifstream file (path, std::ios::binary | std::ios::ate);
    if (!file.good ())
@@ -415,7 +423,7 @@ serve_static (const std::string& uri)
    if (!file.read (buffer.data (), size))
       error_400 ();
 
-   std::cerr << "file data read: " << size << std::endl;
+   logT << "file data read: " << size << std::endl;
 
    std::vector <std::string> ps;
    split (uri, ps, '.');
@@ -454,8 +462,8 @@ process_request ()
    const auto& uri_ = params ["DOCUMENT_URI"];
    const auto& uri = (uri_ == "/") ? "/view/main" : uri_;
    const auto& query = params ["QUERY_STRING"];
-   std::cerr << "process_request: uri='" << uri << "' q='" << query << "'"
-             << std::endl;
+   logT << "process_request: uri='" << uri << "' q='" << query << "'"
+        << std::endl;
 
    if (uri.find ("/view/") == 0)
    {
@@ -477,7 +485,7 @@ parse_params (char* buf, uint16_t contentLength)
    if (!contentLength)
    {
       for (const auto& p: params)
-         std::cerr << "'" << p.first << "' = '" << p.second << "'" << std::endl;
+         logT << "'" << p.first << "' = '" << p.second << "'" << std::endl;
 
       has_params = true;
       process_request ();
@@ -523,7 +531,7 @@ buffer_stdin (char* buf, uint16_t contentLength)
 {
    if (!contentLength)
    {
-      std::cerr << "stdin: '" << input.str () << "'" << std::endl;
+      logT << "stdin: '" << input.str () << "'" << std::endl;
 
       has_input = true;
       process_request ();
@@ -547,16 +555,17 @@ main (int argc, char** argv)
       requestId = hdr->requestIdHi << 8 | hdr->requestIdLo;
       uint16_t contentLength = hdr->contentLengthHi << 8 | hdr->contentLengthLo;
 
-      std::cerr << "\nFCGI_Header v=" << (int)hdr->version
-                << " type=" << (int)hdr->type
-                << " requestId=" << requestId
-                << " contentLength=" << contentLength
-                << " paddingLength=" << (int)hdr->paddingLength
-                << std::endl;
+      logT << "\nFCGI_Header v=" << (int)hdr->version
+           << " type=" << (int)hdr->type
+           << " requestId=" << requestId
+           << " contentLength=" << contentLength
+           << " paddingLength=" << (int)hdr->paddingLength
+           << std::endl;
 
       if (hdr->version != FCGI_VERSION_1)
       {
-         fprintf (stderr, "Unsupported FCGI version %d\n", hdr->version);
+         std::cerr << "Unsupported FCGI version " << (int)hdr->version
+                   << std::endl;
          exit (1);
       }
 
@@ -576,7 +585,8 @@ main (int argc, char** argv)
          buffer_stdin (buf + FCGI_HEADER_LEN, contentLength);
          break;
       default:
-         fprintf (stderr, "Unhandled FCGI request type: %u\n", hdr->type);
+         std::cerr << "Unhandled FCGI request type: " << (int)hdr->type
+                   << std::endl;
          break;
       }
    }
