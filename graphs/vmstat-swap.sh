@@ -10,7 +10,7 @@ cd $(dirname $0)/..
 echo $0: TIMESPAN=${TIMESPAN} >&2
 
 inst=vmstat
-state=./probes/vmstat/$inst.env
+state=./probes/vmstat.env
 if [ ! -f $state ]
 then
     echo "state not found, expected: ${state}" >&2

@@ -22,14 +22,14 @@ oid_txbytes=.1.3.6.1.2.1.31.1.1.1.10
 oid_rxpkts=.1.3.6.1.2.1.31.1.1.1.7
 oid_txpkts=.1.3.6.1.2.1.31.1.1.1.11
 
-state=./probes/if/$inst.env
+state=./probes/if-$inst.env
 if [ ! -f ${state} ]
 then
     ifIndex=$(${snmpwalk} ${SNMP_COMMON_ARGS} ${oid_ifdescr} | \
                   grep ${interface} | cut -d= -f1 | cut -d. -f13)
     [ -z $ifIndex ] && exit 1
 
-    echo "ifIndex=$ifIndex" >> $state
+    echo "ifIndex=$ifIndex" >> ${state}
 fi
 
 . ${state}

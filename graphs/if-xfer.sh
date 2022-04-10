@@ -18,7 +18,7 @@ shift
 
 echo $0: interface=${interface} TIMESPAN=${TIMESPAN} >&2
 
-inst=if-$interface
+inst=if-${interface}
 RRDFILE="${RRDFILES}/${inst}.rrd"
 if ! test -f "${RRDFILE}"
 then

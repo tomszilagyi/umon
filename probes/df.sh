@@ -9,7 +9,7 @@ shift
 
 thedf="$(df -kl | tail -n +2)"
 
-state=./probes/df/$inst.env
+state=./probes/df.env
 if [ ! -f ${state} ]
 then
     n=0

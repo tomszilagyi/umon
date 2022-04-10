@@ -78,7 +78,7 @@ do
     data="${data}:${val}"
 done
 
-state=./probes/vmstat/$inst.env
+state=./probes/vmstat.env
 if [ ! -f ${state} ]
 then
     echo "gauges=\"${gauges}\"" >> ${state}

@@ -21,8 +21,8 @@ then
             ;;
     esac
 
-    echo "snmpget=\"${snmpget}\"" >> $state
-    echo "snmpwalk=\"${snmpwalk}\"" >> $state
+    echo "snmpget=\"${snmpget}\"" >> ${state}
+    echo "snmpwalk=\"${snmpwalk}\"" >> ${state}
 fi
 . ${state}
 
@@ -33,20 +33,20 @@ probe() {
 
     if [ -n "$1" ]
     then
-        inst=$name-$1
+        inst=${name}-$1
     else
-        inst=$name
+        inst=${name}
     fi
 
-    sample=./probes/$name/sample.sh
-    if [ ! -x $sample ]
+    theprobe=./probes/${name}.sh
+    if [ ! -x ${theprobe} ]
     then
         echo "error: $name: no such probe" >&2
         return
     fi
 
     echo "probe name=$name inst=$inst args=$@"
-    ./probes/$name/sample.sh $inst $@
+    ./probes/${name}.sh ${inst} $@
 }
 
 if ! test -d "${RRDFILES}" ; then

@@ -9,7 +9,7 @@ shift
 
 oid_procload=.1.3.6.1.2.1.25.3.3.1.2
 
-state=./probes/cpu/$inst.env
+state=./probes/cpu.env
 if [ ! -f ${state} ]
 then
     nCores=$(${snmpwalk} ${SNMP_COMMON_ARGS} ${oid_procload} | \

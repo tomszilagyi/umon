@@ -11,7 +11,7 @@ inst=df
 
 echo $0: TIMESPAN=${TIMESPAN} >&2
 
-state=./probes/df/$inst.env
+state=./probes/df.env
 if [ ! -f $state ]
 then
     echo "state not found, expected: ${state}" >&2

@@ -1,5 +1,4 @@
 db/
 probes/*.env
-probes/*/*.env
 probes.conf
 view.conf

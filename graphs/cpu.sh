@@ -11,7 +11,7 @@ inst=cpu
 
 echo $0: TIMESPAN=${TIMESPAN} >&2
 
-state=./probes/cpu/$inst.env
+state=./probes/cpu.env
 if [ ! -f $state ]
 then
     echo "state not found, expected: ${state}" >&2
