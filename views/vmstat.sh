@@ -29,14 +29,15 @@ probe() {
     done
 
     case "${name}" in
-        "if")
-            echo "<p><img src=\"/graph/${name}-xfer${params}/${TIMESPAN}\"></p>"
+        "cpu")
+            echo "<p><img src=\"/graph/${name}${params}/${TIMESPAN}\"></p>"
             ;;
         "vmstat")
+            echo "<p><img src=\"/graph/${name}-events${params}/${TIMESPAN}\"></p>"
             echo "<p><img src=\"/graph/${name}-memory${params}/${TIMESPAN}\"></p>"
+            echo "<p><img src=\"/graph/${name}-swap${params}/${TIMESPAN}\"></p>"
             ;;
         *)
-            echo "<p><img src=\"/graph/${name}${params}/${TIMESPAN}\"></p>"
             ;;
     esac
 }
