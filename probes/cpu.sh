@@ -7,6 +7,7 @@ shift
 . ./umon.conf
 . ./probes/probes.env
 
+# Ref.: http://www.net-snmp.org/docs/mibs/host.html
 oid_procload=.1.3.6.1.2.1.25.3.3.1.2
 
 state=./probes/cpu.env

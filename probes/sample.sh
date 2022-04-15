@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# This is the main entry point for running all probes
+# enabled via probes.conf.
+
 cd $(dirname $0)/..
 . ./umon.conf
 

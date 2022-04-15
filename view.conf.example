@@ -2,5 +2,7 @@
 # Simply uncomment the ones you need.
 
 main
+io
+disk
 network
 vmstat

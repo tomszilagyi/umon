@@ -6,5 +6,7 @@ probe cpu
 probe vmstat
 probe df
 
+probe diskio sda
+
 probe if ens3
 probe if lo

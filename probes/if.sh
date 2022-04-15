@@ -16,6 +16,7 @@ shift
 . ./umon.conf
 . ./probes/probes.env
 
+# Ref.: http://www.net-snmp.org/docs/mibs/ifMIBObjects.html
 oid_ifdescr=.1.3.6.1.2.1.31.1.1.1.1
 oid_rxbytes=.1.3.6.1.2.1.31.1.1.1.6
 oid_txbytes=.1.3.6.1.2.1.31.1.1.1.10
@@ -26,8 +27,8 @@ state=./probes/if-$inst.env
 if [ ! -f ${state} ]
 then
     ifIndex=$(${snmpwalk} ${SNMP_COMMON_ARGS} ${oid_ifdescr} | \
-                  grep ${interface} | cut -d= -f1 | cut -d. -f13)
-    [ -z $ifIndex ] && exit 1
+                  grep -m 1 ${interface} | cut -d= -f1 | cut -d. -f13)
+    [ -z ${ifIndex} ] && exit 1
 
     echo "ifIndex=$ifIndex" >> ${state}
 fi
@@ -42,10 +43,10 @@ rxpkts=$(${snmpget} ${SNMP_COMMON_ARGS} \
                     ${oid_rxpkts}.${ifIndex} | cut -d: -f2 | tr -d ' ')
 txpkts=$(${snmpget} ${SNMP_COMMON_ARGS} \
                     ${oid_txpkts}.${ifIndex} | cut -d: -f2 | tr -d ' ')
-echo "rxbytes=${rxbytes}"
-echo "txbytes=${txbytes}"
-echo "rxpkts=${rxpkts}"
-echo "txpkts=${txpkts}"
+#echo "rxbytes=${rxbytes}"
+#echo "txbytes=${txbytes}"
+#echo "rxpkts=${rxpkts}"
+#echo "txpkts=${txpkts}"
 
 RRDFILE="${RRDFILES}/${inst}.rrd"
 if ! test -f "${RRDFILE}" ; then
