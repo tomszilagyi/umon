@@ -2,3 +2,4 @@ db/
 probes/*.env
 probes.conf
 view.conf
+umon.tar.gz

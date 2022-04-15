@@ -76,7 +76,7 @@ $ crontab -l
 
 
 compile the fastcgi server:
-fcgi/make.sh
+make -C fcgi
 
 run the fastcgi server:
 fcgi/run.sh

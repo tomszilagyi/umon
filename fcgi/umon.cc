@@ -342,7 +342,7 @@ process_view (const std::string& view)
    std::string path = "./views/" + argv0;
    std::vector <char*> argv;
    argv.push_back ((char*)argv0.c_str ());
-   for (int k = 1; k < ps.size (); ++k)
+   for (size_t k = 1; k < ps.size (); ++k)
       argv.push_back ((char*)ps [k].c_str ());
    argv.push_back (nullptr);
    write_view_header (output, views, ps [0], ps [1]);
@@ -380,7 +380,7 @@ process_graph (const std::string& graph)
    std::string path = "./graphs/" + argv0;
    std::vector <char*> argv;
    argv.push_back ((char*)argv0.c_str ());
-   for (int k = 1; k < ps.size (); ++k)
+   for (size_t k = 1; k < ps.size (); ++k)
       argv.push_back ((char*)ps [k].c_str ());
    argv.push_back (nullptr);
    if (child (path.c_str (), argv.data (), nullptr, output))
