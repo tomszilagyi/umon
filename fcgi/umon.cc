@@ -245,9 +245,9 @@ function onMenu ()
 <body>
 
 <div id="nav">
-<form id="menu" action="javascript:;" onsubmit="onMenu(this)">
+<form id="menu" action="javascript:;" onsubmit="onMenu()">
    <label for="view">View:</label>
-   <select id="view" name="view">
+   <select id="view" name="view" onchange="onMenu()">
 )raw";
 
    for (const auto& v: views)
@@ -260,7 +260,7 @@ function onMenu ()
 
    output << R"raw(   </select>
    <label for="timespan">last</label>
-   <select id="timespan" name="timespan">
+   <select id="timespan" name="timespan" onchange="onMenu()">
 )raw";
 
    for (const auto& tp: timespans)
@@ -272,7 +272,7 @@ function onMenu ()
    }
 
    output << R"raw(   </select>
-   <input type="submit" value="Go">
+   <input type="submit" value="Refresh">
 </form>
 </div>
 )raw";
