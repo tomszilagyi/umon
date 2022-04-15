@@ -14,6 +14,8 @@ $(uname -mrsv)</br>
 $(uptime | cut -d' ' -f 3-)
 </h3>
 <p>$(date "+%Y-%m-%d %H:%M:%S %Z")</p>
+
+<div id="graphs">
 EOF
 
 probe() {
@@ -30,8 +32,11 @@ probe() {
 
     case "${name}" in
         "diskio")
-            echo "<p><img src=\"/graph/${name}-ops${params}/${TIMESPAN}\"></p>"
-            echo "<p><img src=\"/graph/${name}-xfer${params}/${TIMESPAN}\"></p>"
+            echo "<img src=\"/graph/${name}-ops${params}/${TIMESPAN}\">"
+            echo "<img src=\"/graph/${name}-xfer${params}/${TIMESPAN}\">"
+            ;;
+        "df")
+            echo "<img src=\"/graph/${name}${params}/${TIMESPAN}\">"
             ;;
         *)
             ;;
@@ -39,3 +44,5 @@ probe() {
 }
 
 . ./probes.conf
+
+echo "</div>"

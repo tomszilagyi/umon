@@ -10,3 +10,14 @@ body {
    background-color: #234;
    padding: 10px;
 }
+
+#graphs {
+   display: flex;
+   flex-wrap: wrap;
+   justify-content: center;
+   align-items: flex-start;
+}
+
+img {
+   margin: 4px;
+}

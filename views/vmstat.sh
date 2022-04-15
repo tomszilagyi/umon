@@ -14,6 +14,8 @@ $(uname -mrsv)</br>
 $(uptime | cut -d' ' -f 3-)
 </h3>
 <p>$(date "+%Y-%m-%d %H:%M:%S %Z")</p>
+
+<div id="graphs">
 EOF
 
 probe() {
@@ -30,12 +32,12 @@ probe() {
 
     case "${name}" in
         "cpu")
-            echo "<p><img src=\"/graph/${name}${params}/${TIMESPAN}\"></p>"
+            echo "<img src=\"/graph/${name}${params}/${TIMESPAN}\">"
             ;;
         "vmstat")
-            echo "<p><img src=\"/graph/${name}-events${params}/${TIMESPAN}\"></p>"
-            echo "<p><img src=\"/graph/${name}-memory${params}/${TIMESPAN}\"></p>"
-            echo "<p><img src=\"/graph/${name}-swap${params}/${TIMESPAN}\"></p>"
+            echo "<img src=\"/graph/${name}-events${params}/${TIMESPAN}\">"
+            echo "<img src=\"/graph/${name}-memory${params}/${TIMESPAN}\">"
+            echo "<img src=\"/graph/${name}-swap${params}/${TIMESPAN}\">"
             ;;
         *)
             ;;
@@ -43,3 +45,5 @@ probe() {
 }
 
 . ./probes.conf
+
+echo "</div>"
