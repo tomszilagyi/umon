@@ -78,8 +78,34 @@ $ crontab -l
 compile the fastcgi server:
 make -C fcgi
 
-run the fastcgi server:
-fcgi/run.sh
+run the fastcgi server standalone (useful for debugging, as you will
+see the stdout in the console):
+fcgi/standalone.sh
+
+For deployment, it is probably better to set up (x)inetd to serve the
+umon_fcgi via invoking fcgi/inetd.sh. This is good for development as
+well, in the sense that nothing has to be restarted after rebuilding
+the umon_fcgi executable; however, the stderr will go to /dev/null.
+Use a config similar to this:
+
+OpenBSD:/etc/inetd.conf
+127.0.0.1:3333  stream  tcp     nowait  _umon     /path/to/umon/fcgi/inetd.sh
+
+Linux:/etc/xinetd.d/umon_fcgi
+service umon_fcgi
+{
+        disable         = no
+        type            = UNLISTED
+        socket_type     = stream
+        protocol        = tcp
+        interface       = 127.0.0.1
+        port            = 3333
+        user            = _umon
+        wait            = no
+        server          = /path/to/umon/fcgi/inetd.sh
+}
+
+Don't forget to enable/start (x)inetd with the respective OS-specific commands.
 
 
 configure the views you want to access by copying view.conf.example to
