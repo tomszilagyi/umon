@@ -1,4 +1,6 @@
-/* This file is part of uMon.
+/* -*- C++ -*-
+ *
+ * This file is part of uMon.
  * Copyright (c) 2022 Tom Szilagyi <tom.szilagyi@altmail.se>
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -125,7 +127,7 @@ struct FCGI_EndRequest
 struct FCGI_UnknownTypeBody
 {
    unsigned char type;
-   unsigned char reserved [7];
+   unsigned char reserved [7] = {0, 0, 0, 0, 0, 0, 0};
 };
 
 struct FCGI_UnknownType

@@ -1,4 +1,6 @@
-/* This file is part of uMon.
+/* -*- C++ -*-
+ *
+ * This file is part of uMon.
  * Copyright (c) 2022 Tom Szilagyi <tom.szilagyi@altmail.se>
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -15,6 +17,16 @@
  */
 
 #include <string>
+#include <sstream>
 
 std::string& trim_left (std::string& str);
 std::string& trim_right (std::string& str);
+
+template <class Container>
+void split (const std::string& str, Container& container, char delim = ' ')
+{
+   std::stringstream ss (str);
+   std::string token;
+   while (std::getline (ss, token, delim))
+      container.push_back (token);
+}

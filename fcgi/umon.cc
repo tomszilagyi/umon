@@ -32,7 +32,6 @@
 #include <vector>
 
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -76,25 +75,20 @@ const std::unordered_map <std::string, std::string> ctypes =
 
 const std::string ctype_default = "application/octet-stream";
 
-constexpr const size_t bufsize = FCGI_HEADER_LEN + 256 + 65536;
-char buf [bufsize];
+const std::unordered_map <int, std::string> http_status_text =
+{
+   {200,        "OK"},
+   {400,        "Bad Request"},
+   {404,        "Not Found"},
+   {500,        "Internal Server Error"},
+};
 
-uint16_t requestId;
+int requestId = -1;
+std::chrono::time_point <std::chrono::system_clock> request_start_time;
 std::unordered_map <std::string, std::string> params;
 std::ostringstream input;
 bool has_params = false;
 bool has_input = false;
-
-std::chrono::time_point <std::chrono::system_clock> request_start_time;
-
-template <class Container>
-void split (const std::string& str, Container& container, char delim = ' ')
-{
-   std::stringstream ss (str);
-   std::string token;
-   while (std::getline (ss, token, delim))
-      container.push_back (token);
-}
 
 int
 read_buf (char* buf, size_t toRead)
@@ -182,13 +176,42 @@ emit_end_request ()
    std::cout.flush ();
 }
 
-void error_page (const std::string& status)
+void
+emit_unknown_type (uint8_t type)
 {
+   std::cerr << "Unhandled FCGI request type: " << (int)type
+             << std::endl;
+
+   FCGI_UnknownType req;
+   req.header.type = FCGI_UNKNOWN_TYPE;
+   req.header.requestIdHi = requestId >> 8;
+   req.header.requestIdLo = requestId & 0xff;
+   req.header.contentLengthHi = 0;
+   req.header.contentLengthLo = 8;
+   req.body.type = type;
+
+   std::cout.write ((const char*)&req, sizeof (req));
+   std::cout.flush ();
+}
+
+void http_error (int status, const std::string& message = "")
+{
+   auto it = http_status_text.find (status);
+   if (it == http_status_text.end ())
+   {
+      std::cerr << "*** Status code " << status
+                << " missing from http_status_text{} map!"
+                << std::endl;
+      exit (1);
+   }
+
    std::ostringstream output;
-   output << "<h2>" << status << "</h2>";
+   output << "<h2>" << status << " " << it->second << "</h2>";
+   if (message != "")
+      output << "<p>" << message << "</p>";
 
    std::ostringstream header;
-   header << "Status: " << status << "\r\n"
+   header << "Status: " << status << " " << it->second << "\r\n"
           << "Content-type: text/html\r\n"
           << "Content-length: " << output.str ().length () << "\r\n";
 
@@ -203,16 +226,6 @@ void error_page (const std::string& status)
    emit_end_request ();
 
    exit (0);
-}
-
-void error_400 ()
-{
-   error_page ("400 Bad Request");
-}
-
-void error_404 ()
-{
-   error_page ("404 Not Found");
 }
 
 void
@@ -317,10 +330,14 @@ process_view (const std::string& view)
    split (view, ps, '/');
 
    auto views = get_views ();
+   if (views.size () == 0)
+      http_error (500, "No views available, check your view.conf!");
+   else
    {
       auto it = std::find (views.begin (), views.end (), ps [0]);
       if (it == views.end ())
-         error_400 ();
+         http_error (404, "The requested view is not available. "
+                     "Hint: check your view.conf!");
    }
 
    std::string timespan = timespan_default;
@@ -347,7 +364,7 @@ process_view (const std::string& view)
    argv.push_back (nullptr);
    write_view_header (output, views, ps [0], ps [1]);
    if (child (path.c_str (), argv.data (), nullptr, output))
-      error_400 ();
+      http_error (500, "The child process could not be executed.");
    write_view_footer (output);
 
    std::ostringstream header;
@@ -384,8 +401,8 @@ process_graph (const std::string& graph)
       argv.push_back ((char*)ps [k].c_str ());
    argv.push_back (nullptr);
    if (child (path.c_str (), argv.data (), nullptr, output))
-      error_400 ();
-   logT << "output read: " << output.str ().size () << std::endl;
+      http_error (500, "The child process could not be executed.");
+   logT << "output bytes read: " << output.str ().size () << std::endl;
 
    std::ostringstream header;
    header << "Content-type: image/png\r\n"
@@ -414,16 +431,16 @@ serve_static (const std::string& uri)
 
    std::ifstream file (path, std::ios::binary | std::ios::ate);
    if (!file.good ())
-      error_404 ();
+      http_error (404);
 
    std::streamsize size = file.tellg ();
    file.seekg (0, std::ios::beg);
 
    std::vector <char> buffer (size);
    if (!file.read (buffer.data (), size))
-      error_400 ();
+      http_error (500);
 
-   logT << "file data read: " << size << std::endl;
+   logT << "file data read: " << size << " bytes" << std::endl;
 
    std::vector <std::string> ps;
    split (uri, ps, '.');
@@ -492,37 +509,49 @@ parse_params (char* buf, uint16_t contentLength)
       return;
    }
 
+   auto check_overrun =
+      [=] (int p)
+      {
+         if (p > contentLength)
+         {
+            std::cerr << "Invalid input (would result in buffer overread)"
+                      << std::endl;
+            exit (1);
+         }
+      };
+
    int pos = 0;
+   auto read_length =
+      [&] (uint32_t& len)
+      {
+         if (buf [pos] >> 7)
+         {
+            check_overrun (pos + 4);
+            len = (buf [pos++] & 0x7f) << 24;
+            len |= buf [pos++] << 16;
+            len |= buf [pos++] << 8;
+            len |= buf [pos++];
+         }
+         else
+         {
+            check_overrun (pos + 2);
+            len = buf [pos++];
+         }
+      };
+
    while (pos < contentLength)
    {
       uint32_t name_len;
-      if (buf [pos] >> 7)
-      {
-         name_len = (buf [pos++] & 0x7f) << 24;
-         name_len |= buf [pos++] << 16;
-         name_len |= buf [pos++] << 8;
-         name_len |= buf [pos++];
-      }
-      else
-         name_len = buf [pos++];
+      read_length (name_len);
 
       uint32_t value_len;
-      if (buf [pos] >> 7)
-      {
-         value_len = (buf [pos++] & 0x7f) << 24;
-         value_len |= buf [pos++] << 16;
-         value_len |= buf [pos++] << 8;
-         value_len |= buf [pos++];
-      }
-      else
-         value_len = buf [pos++];
+      read_length (value_len);
 
+      check_overrun (pos + name_len + value_len);
       params.emplace (std::piecewise_construct,
                       std::forward_as_tuple (buf + pos, name_len),
                       std::forward_as_tuple (buf + pos + name_len, value_len));
-
-      pos += name_len;
-      pos += value_len;
+      pos += name_len + value_len;
    }
 }
 
@@ -541,6 +570,9 @@ buffer_stdin (char* buf, uint16_t contentLength)
    input << std::string (buf, contentLength);
 }
 
+constexpr const size_t bufsize = FCGI_HEADER_LEN + 256 + 65536;
+char buf [bufsize];
+
 int
 main (int argc, char** argv)
 {
@@ -549,15 +581,13 @@ main (int argc, char** argv)
       if (read_buf (buf, FCGI_HEADER_LEN))
          return 0;
 
-      int pos = FCGI_HEADER_LEN;
-
       FCGI_Header* hdr = (FCGI_Header*)buf;
-      requestId = hdr->requestIdHi << 8 | hdr->requestIdLo;
+      int newRequestId = hdr->requestIdHi << 8 | hdr->requestIdLo;
       uint16_t contentLength = hdr->contentLengthHi << 8 | hdr->contentLengthLo;
 
       logT << "\nFCGI_Header v=" << (int)hdr->version
            << " type=" << (int)hdr->type
-           << " requestId=" << requestId
+           << " requestId=" << newRequestId
            << " contentLength=" << contentLength
            << " paddingLength=" << (int)hdr->paddingLength
            << std::endl;
@@ -569,14 +599,28 @@ main (int argc, char** argv)
          exit (1);
       }
 
+      if (requestId < 0)
+         requestId = newRequestId;
+      else if (newRequestId != requestId)
+      {
+         std::cerr << "Error: request with requestId " << newRequestId
+                   << " while serving request " << requestId
+                   << std::endl;
+         exit (1);
+      }
+
       size_t toRead = contentLength + hdr->paddingLength;
-      if (read_buf (buf + pos, toRead))
+      if (read_buf (buf + FCGI_HEADER_LEN, toRead))
          return 0;
 
       switch (hdr->type)
       {
       case FCGI_BEGIN_REQUEST:
          begin_request ((FCGI_BeginRequest*)buf);
+         break;
+      case FCGI_ABORT_REQUEST:
+         emit_end_request ();
+         exit (0);
          break;
       case FCGI_PARAMS:
          parse_params (buf + FCGI_HEADER_LEN, contentLength);
@@ -585,8 +629,8 @@ main (int argc, char** argv)
          buffer_stdin (buf + FCGI_HEADER_LEN, contentLength);
          break;
       default:
-         std::cerr << "Unhandled FCGI request type: " << (int)hdr->type
-                   << std::endl;
+         emit_unknown_type (hdr->type);
+         exit (0);
          break;
       }
    }
