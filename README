@@ -1,9 +1,19 @@
-uMon - primitive RRDtool-based host monitoring
-==============================================
+uMon - minimal RRDtool-based host monitoring
+============================================
 
+create a dedicated unprivileged user:
+
+# useradd -c "uMon" -d /var/umon -s /sbin/nologin -L daemon _umon
+# mkdir /var/umon
+# chown _umon:_umon /var/umon
+
+untar the umon archive to the home directory of this user:
+# doas -u _umon /bin/sh -c "cd && tar xzf /path/to/umon.tar.gz"
 
 install dependencies:
 # pkg_add rrdtool socat
+(socat is only needed for running the fcgi as a standalone service;
+for production, usage of (x)inetd is recommended.)
 
 
 configure httpd by adding this to httpd.conf:
@@ -15,6 +25,12 @@ server "default" {
         fastcgi socket tcp 127.0.0.1 3333
     }
 }
+
+(Change listen address/port appropriately, e.g. 'listen on 127.0.0.1'
+instead of 'listen on *' if you do not wish the uMon webpage to be
+accessible from the external network. In such case, you can still
+access it by setting up an ssh tunnel. Or set up http basic auth so
+only people who know the credentials have access to it. Etc.)
 
 # rcctl reload httpd
 
@@ -72,14 +88,14 @@ Creating db/if-lo.rrd
 create a crontab entry for running sample.sh every minute:
 $ crontab -l
 ...
-*       *       *       *       *       /path/to/umon/probes/sample.sh 2>&1 >/dev/null
+*       *       *       *       *       /var/umon/probes/sample.sh 2>&1 >/dev/null
 
 
 compile the fastcgi server:
 make -C fcgi
 
 run the fastcgi server standalone (useful for debugging, as you will
-see the stdout in the console):
+see the stdout in the console), note this needs socat to be installed:
 fcgi/standalone.sh
 
 For deployment, it is probably better to set up (x)inetd to serve the
@@ -89,7 +105,7 @@ the umon_fcgi executable; however, the stderr will go to /dev/null.
 Use a config similar to this:
 
 OpenBSD:/etc/inetd.conf
-127.0.0.1:3333  stream  tcp     nowait  _umon     /path/to/umon/fcgi/inetd.sh
+127.0.0.1:3333  stream  tcp     nowait  _umon     /var/umon/fcgi/inetd.sh
 
 Linux:/etc/xinetd.d/umon_fcgi
 service umon_fcgi
@@ -102,7 +118,7 @@ service umon_fcgi
         port            = 3333
         user            = _umon
         wait            = no
-        server          = /path/to/umon/fcgi/inetd.sh
+        server          = /var/umon/fcgi/inetd.sh
 }
 
 Don't forget to enable/start (x)inetd with the respective OS-specific commands.

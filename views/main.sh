@@ -39,6 +39,7 @@ probe() {
             ;;
         "vmstat")
             echo "<img src=\"/graph/${name}-memory${params}/${TIMESPAN}\">"
+            echo "<img src=\"/graph/${name}-events${params}/${TIMESPAN}\">"
             ;;
         *)
             echo "<img src=\"/graph/${name}${params}/${TIMESPAN}\">"

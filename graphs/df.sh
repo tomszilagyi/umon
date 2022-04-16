@@ -50,7 +50,7 @@ do
           CDEF:USED$j=USEDKB$j,1024,* \
           CDEF:CAP$j=USEDKB$j,100.0,*,${total},/ \
           CDEF:TOTAL$j=USEDKB$j,0,*,${total},+,1024,* \
-          LINE:CAP$j#${color}:${fs} \
+          LINE:CAP$j#${color}:${fs}\t \
           GPRINT:TOTAL$j:LAST:%5.1lf%sB \
           GPRINT:USED$j:MAX:%5.1lf%sB \
           GPRINT:USED$j:AVERAGE:%5.1lf%sB \
@@ -66,5 +66,6 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --vertical-label "% Capacity" \
         --watermark "${WATERMARK}" \
         --base 1024 \
-        "COMMENT: Filesystem    Total    MaxUse   AvgUse   CurUse   CurCap  Mount\n" \
+        --tabwidth 50 \
+        "COMMENT: Filesystem\t    Total   MaxUsed  AvgUsed  CurUsed  CurCap  Mount\n" \
         ${SPEC}

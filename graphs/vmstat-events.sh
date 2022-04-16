@@ -55,10 +55,10 @@ for cnt in ${counters}; do
 done
 
 exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
-        --title "vmstat events" \
+        --title "VM events" \
         --vertical-label "Events per second" \
         --watermark "${WATERMARK}" \
         --logarithmic --units=si \
-        --tabwidth 90 \
-        COMMENT:"\t     Maximum      Average     Current\n" \
+        --tabwidth 85 \
+        COMMENT:"\t      Maximum     Average     Current\n" \
         ${SPEC}
