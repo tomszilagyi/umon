@@ -57,4 +57,10 @@ if ! test -d "${RRDFILES}" ; then
     mkdir -p ${RRDFILES}
 fi
 
+if [ ! -f ./probes.conf ]
+then
+    echo "error: missing probes.conf" >&2
+    exit 1
+fi
+
 . ./probes.conf
