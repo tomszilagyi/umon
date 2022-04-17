@@ -50,6 +50,7 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --vertical-label "% Utilisation" \
         --watermark "${WATERMARK}" \
         --legend-direction=bottomup \
+        --lower-limit 0 \
         --tabwidth 60 \
         ${SPEC} \
         "COMMENT:\t Maximum  Average Current\n"

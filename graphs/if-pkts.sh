@@ -27,6 +27,9 @@ then
     exit 1
 fi
 
+color3=$(echo ${STACK_COLORS} | cut -d: -f3)
+color4=$(echo ${STACK_COLORS} | cut -d: -f4)
+
 exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --title "Packets on ${interface}" \
         --vertical-label "Packets per Second" \
@@ -36,14 +39,14 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         DEF:IN=${RRDFILE}:rxpkts:AVERAGE \
         DEF:OUT=${RRDFILE}:txpkts:AVERAGE \
         CDEF:IN_NEG="IN,-1,*" \
-        LINE:OUT#00A000:"Out (TX)\t" \
-        AREA:OUT#00A00050 \
+        LINE:OUT#${color3}:"Out (TX)\t" \
+        AREA:OUT#${color3}50 \
         GPRINT:OUT:MAX:"%6.1lf%s" \
         GPRINT:OUT:AVERAGE:"%6.1lf%s" \
         GPRINT:OUT:LAST:"%6.1lf%s\n" \
         HRULE:0#808080 \
-        LINE:IN_NEG#0000C0:" In (RX)\t" \
-        AREA:IN_NEG#0000C050 \
+        LINE:IN_NEG#${color4}:" In (RX)\t" \
+        AREA:IN_NEG#${color4}50 \
         GPRINT:IN:MAX:"%6.1lf%s" \
         GPRINT:IN:AVERAGE:"%6.1lf%s" \
         GPRINT:IN:LAST:"%6.1lf%s\n"

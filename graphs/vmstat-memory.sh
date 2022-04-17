@@ -47,14 +47,14 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         GPRINT:total:LAST:"%6.2lf%SB\n" \
         DEF:free=${RRDFILE}:free_memory:AVERAGE \
         CDEF:free_neg=free,-1,* \
-        AREA:free_neg#${color2}40:STACK \
-        LINE:0#${color2}:"free\t":STACK \
+        AREA:free_neg#${color3}40:STACK \
+        LINE:0#${color3}:"free\t":STACK \
         GPRINT:free:MAX:"%6.2lf%SB" \
         GPRINT:free:AVERAGE:"%6.2lf%SB" \
         GPRINT:free:LAST:"%6.2lf%SB\n" \
         DEF:active=${RRDFILE}:active_memory:AVERAGE \
-        AREA:active#${color3}40 \
-        LINE:active#${color3}:"active\t" \
+        AREA:active#${color2}40 \
+        LINE:active#${color2}:"active\t" \
         GPRINT:active:MAX:"%6.2lf%SB" \
         GPRINT:active:AVERAGE:"%6.2lf%SB" \
         GPRINT:active:LAST:"%6.2lf%SB\n" \

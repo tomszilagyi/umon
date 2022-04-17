@@ -243,7 +243,7 @@ write_view_header (std::ostringstream& output,
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="/style.css">
 <title>)raw";
-   output << hostname << ":" << view << "/" << timespan << " | uMon";
+   output << hostname << ":" << view << "/" << timespan << " | &mu;Mon";
    output << R"raw(</title>
 <script>
 function onMenu ()
