@@ -8,7 +8,11 @@ body {
 #nav {
    color: #fff;
    background-color: #234;
-   padding: 10px;
+   padding: 2px;
+}
+
+select,input,label {
+   margin-bottom: 4px;
 }
 
 #graphs {
@@ -16,6 +20,14 @@ body {
    flex-wrap: wrap;
    justify-content: center;
    align-items: flex-start;
+}
+
+#logo {
+   margin: 0px;
+   margin-right: 4px;
+   padding: 0px;
+   vertical-align: bottom;
+   height: 32px;
 }
 
 img {

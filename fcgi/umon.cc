@@ -212,8 +212,8 @@ void http_error (int status, const std::string& message = "")
 
    std::ostringstream header;
    header << "Status: " << status << " " << it->second << "\r\n"
-          << "Content-type: text/html\r\n"
-          << "Content-length: " << output.str ().length () << "\r\n";
+          << "Content-Type: text/html\r\n"
+          << "Content-Length: " << output.str ().length () << "\r\n";
 
    using namespace std::literals;
    const auto now = std::chrono::system_clock::now ();
@@ -240,6 +240,7 @@ write_view_header (std::ostringstream& output,
    output << R"raw(<!DOCTYPE html>
 <html><head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="/style.css">
 <title>)raw";
    output << hostname << ":" << view << "/" << timespan << " | uMon";
@@ -259,6 +260,7 @@ function onMenu ()
 
 <div id="nav">
 <form id="menu" action="javascript:;" onsubmit="onMenu()">
+   <img id="logo" src="/umon_logo_white.png">
    <label for="view">View:</label>
    <select id="view" name="view" onchange="onMenu()">
 )raw";
@@ -368,8 +370,8 @@ process_view (const std::string& view)
    write_view_footer (output);
 
    std::ostringstream header;
-   header << "Content-type: text/html\r\n"
-          << "Content-length: " << output.str ().length () << "\r\n";
+   header << "Content-Type: text/html\r\n"
+          << "Content-Length: " << output.str ().length () << "\r\n";
 
    using namespace std::literals;
    const auto now = std::chrono::system_clock::now ();
@@ -405,8 +407,8 @@ process_graph (const std::string& graph)
    logT << "output bytes read: " << output.str ().size () << std::endl;
 
    std::ostringstream header;
-   header << "Content-type: image/png\r\n"
-          << "Content-length: " << output.str ().size () << "\r\n";
+   header << "Content-Type: image/png\r\n"
+          << "Content-Length: " << output.str ().size () << "\r\n";
 
    using namespace std::literals;
    const auto now = std::chrono::system_clock::now ();
@@ -454,8 +456,9 @@ serve_static (const std::string& uri)
    }
 
    std::ostringstream header;
-   header << "Content-type: " << ctype << "\r\n"
-          << "Content-length: " << size << "\r\n";
+   header << "Cache-Control: max-age=86400\r\n"
+          << "Content-Type: " << ctype << "\r\n"
+          << "Content-Length: " << size << "\r\n";
 
    using namespace std::literals;
    const auto now = std::chrono::system_clock::now ();
