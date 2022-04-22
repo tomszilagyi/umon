@@ -25,7 +25,7 @@ fi
 pcts=$(${snmpwalk} ${SNMP_COMMON_ARGS} ${oid_procload} | \
            cut -d: -f2 | tr -d ' ' | tr '\n' ':' | cut -d: -f -${nCores})
 
-echo "$nCores cores, pcts=$pcts"
+#echo "$nCores cores, pcts=$pcts"
 
 RRDFILE="${RRDFILES}/${inst}.rrd"
 if ! test -f "${RRDFILE}" ; then

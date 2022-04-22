@@ -49,7 +49,7 @@ probe() {
     fi
 
     echo "probe name=$name inst=$inst args=$@"
-    ./probes/${name}.sh ${inst} $@
+    ./probes/${name}.sh ${inst} $@ &
 }
 
 if ! test -d "${RRDFILES}" ; then
@@ -64,3 +64,5 @@ then
 fi
 
 . ./probes.conf
+
+wait

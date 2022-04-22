@@ -65,7 +65,7 @@ data="N"
 
 # These metrics are the same regardless of platform:
 gauges="total_memory free_memory active_memory inactive_memory \
-        total_swap used_swap"
+total_swap used_swap"
 for gg in ${gauges}
 do
     val=$(eval "echo \$$gg")
