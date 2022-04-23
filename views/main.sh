@@ -7,16 +7,7 @@ cd $(dirname $0)/..
 # This needs to come after graph-related input parameters are set:
 . ./graph.conf
 
-cat <<EOF
-<h1>$(hostname)</h1>
-<h3>
-$(uname -mrsv)</br>
-$(uptime | cut -d' ' -f 3-)
-</h3>
-<p>$(date "+%Y-%m-%d %H:%M:%S %Z")</p>
-
-<div id="graphs">
-EOF
+. ./views/header.sh
 
 probe() {
     [ -n "$1" ] || return
@@ -35,7 +26,13 @@ probe() {
             echo "<img src=\"/graph/${name}-xfer${params}/${TIMESPAN}\">"
             ;;
         "if")
-            echo "<img src=\"/graph/${name}-xfer${params}/${TIMESPAN}\">"
+            case "${params}" in
+                /lo*) # ignore loopback interfaces
+                    ;;
+                *)
+                    echo "<img src=\"/graph/${name}-xfer${params}/${TIMESPAN}\">"
+                    ;;
+            esac
             ;;
         "mx")
             echo "<img src=\"/graph/${name}-rates${params}/${TIMESPAN}\">"
