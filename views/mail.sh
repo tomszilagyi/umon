@@ -36,6 +36,9 @@ probe() {
             echo "<img src=\"/graph/${name}-levels${params}/${TIMESPAN}\">"
             echo "<img src=\"/graph/${name}-memory${params}/${TIMESPAN}\">"
             ;;
+        "doveadm-who")
+            echo "<img src=\"/graph/${name}${params}/${TIMESPAN}\">"
+            ;;
         *)
             ;;
     esac
