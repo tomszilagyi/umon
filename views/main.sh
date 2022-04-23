@@ -39,6 +39,9 @@ probe() {
         "mx")
             echo "<img src=\"/graph/${name}-rates${params}/${TIMESPAN}\">"
             ;;
+        "upsc")
+            echo "<img src=\"/graph/${name}-status${params}/${TIMESPAN}\">"
+            ;;
         "vmstat")
             echo "<img src=\"/graph/${name}-memory${params}/${TIMESPAN}\">"
             echo "<img src=\"/graph/${name}-events${params}/${TIMESPAN}\">"

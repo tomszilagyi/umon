@@ -13,3 +13,5 @@ probe if lo
 
 #probe mx
 #probe doveadm-who
+
+#probe upsc theups
