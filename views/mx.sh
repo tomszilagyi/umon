@@ -31,21 +31,12 @@ probe() {
     done
 
     case "${name}" in
-        "diskio")
-            echo "<img src=\"/graph/${name}-xfer${params}/${TIMESPAN}\">"
-            ;;
-        "if")
-            echo "<img src=\"/graph/${name}-xfer${params}/${TIMESPAN}\">"
-            ;;
         "mx")
             echo "<img src=\"/graph/${name}-rates${params}/${TIMESPAN}\">"
-            ;;
-        "vmstat")
+            echo "<img src=\"/graph/${name}-levels${params}/${TIMESPAN}\">"
             echo "<img src=\"/graph/${name}-memory${params}/${TIMESPAN}\">"
-            echo "<img src=\"/graph/${name}-events${params}/${TIMESPAN}\">"
             ;;
         *)
-            echo "<img src=\"/graph/${name}${params}/${TIMESPAN}\">"
             ;;
     esac
 }

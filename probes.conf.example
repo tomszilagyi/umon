@@ -10,3 +10,5 @@ probe diskio sda
 
 probe if ens3
 probe if lo
+
+#probe mx
