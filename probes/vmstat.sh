@@ -102,11 +102,11 @@ if ! test -f "${RRDFILE}" ; then
     DS=
     for gg in ${gauges}
     do
-        DS="${DS} DS:${gg}:GAUGE:${RRD_HEARTBEAT}:U:U"
+        DS="${DS} DS:${gg}:GAUGE:${RRD_HEARTBEAT}:0:U"
     done
     for ctr in ${counters}
     do
-        DS="${DS} DS:${ctr}:COUNTER:${RRD_HEARTBEAT}:U:U"
+        DS="${DS} DS:${ctr}:DERIVE:${RRD_HEARTBEAT}:0:U"
     done
     ${RRDTOOL} create ${RRDFILE} \
                --step ${RRD_COLLECT_STEP} \

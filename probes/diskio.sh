@@ -53,10 +53,10 @@ if ! test -f "${RRDFILE}" ; then
     echo "Creating ${RRDFILE}"
     ${RRDTOOL} create ${RRDFILE} \
         --step ${RRD_COLLECT_STEP} \
-        DS:rdbytes:COUNTER:${RRD_HEARTBEAT}:U:U \
-        DS:wrbytes:COUNTER:${RRD_HEARTBEAT}:U:U \
-        DS:rdops:COUNTER:${RRD_HEARTBEAT}:U:U \
-        DS:wrops:COUNTER:${RRD_HEARTBEAT}:U:U \
+        DS:rdbytes:DERIVE:${RRD_HEARTBEAT}:0:U \
+        DS:wrbytes:DERIVE:${RRD_HEARTBEAT}:0:U \
+        DS:rdops:DERIVE:${RRD_HEARTBEAT}:0:U \
+        DS:wrops:DERIVE:${RRD_HEARTBEAT}:0:U \
         ${RRA_CREATE_ARGS}
 fi
 
