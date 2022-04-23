@@ -1,6 +1,5 @@
 body {
    background: #e0f0e7;
-   text-align: center;
    font: 11pt monospace;
    margin: 0px;
 }
@@ -8,18 +7,24 @@ body {
 #nav {
    color: #fff;
    background-color: #234;
+   text-align: center;
    padding: 2px;
 }
 
 select,input,label {
-   margin-bottom: 4px;
+   margin-bottom: 5px;
+}
+
+#hostinfo {
+   text-align: center;
 }
 
 #graphs {
    display: flex;
    flex-wrap: wrap;
-   justify-content: center;
+   justify-content: flex-start;
    align-items: flex-start;
+   margin: 8px;
 }
 
 #logo {

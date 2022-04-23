@@ -9,6 +9,8 @@ cd $(dirname $0)/..
 
 . ./views/header.sh
 
+echo "<div id=\"graphs\">"
+
 probe() {
     [ -n "$1" ] || return
     name=$1
