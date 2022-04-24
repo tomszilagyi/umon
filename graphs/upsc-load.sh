@@ -33,7 +33,7 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --title "UPS ${ups}: Load percentage" \
         --vertical-label "% Capacity" \
         --watermark "${WATERMARK}" \
-        --y-grid 1:1 \
+        --y-grid 1:1 --units-length 2 \
         --tabwidth 60 \
         COMMENT:"\t  Maximum  Average  Current\n" \
         DEF:load=${RRDFILE}:ups_load:AVERAGE \

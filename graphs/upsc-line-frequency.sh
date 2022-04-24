@@ -34,7 +34,7 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --vertical-label "Hertz" \
         --watermark "${WATERMARK}" \
         --lower-limit 49.5 --upper-limit 50.5 --rigid \
-        --left-axis-format "%4.1lf" \
+        --left-axis-format "%4.1lf" --units-length 3 \
         --tabwidth 60 \
         COMMENT:"\t  Maximum  Average  Current\n" \
         DEF:IN=${RRDFILE}:input_frequency:AVERAGE \

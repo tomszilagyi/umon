@@ -26,8 +26,8 @@ probe() {
     case "${name}" in
         "upsc")
             echo "<img src=\"/graph/${name}-status${params}/${TIMESPAN}\">"
-            echo "<img src=\"/graph/${name}-load${params}/${TIMESPAN}\">"
             echo "<img src=\"/graph/${name}-battery${params}/${TIMESPAN}\">"
+            echo "<img src=\"/graph/${name}-load${params}/${TIMESPAN}\">"
             echo "<img src=\"/graph/${name}-line-voltage${params}/${TIMESPAN}\">"
             echo "<img src=\"/graph/${name}-line-frequency${params}/${TIMESPAN}\">"
             ;;

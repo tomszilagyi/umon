@@ -12,6 +12,7 @@ body {
 }
 
 select,input,label {
+   margin-top: 5px;
    margin-bottom: 5px;
 }
 
@@ -31,7 +32,7 @@ select,input,label {
    margin: 0px;
    margin-right: 4px;
    padding: 0px;
-   vertical-align: bottom;
+   vertical-align: middle;
    height: 32px;
 }
 

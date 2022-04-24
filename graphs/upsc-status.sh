@@ -34,10 +34,11 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --title "UPS ${ups}: Power source" \
         --watermark "${WATERMARK}" \
         --lower-limit 0 --upper-limit 1 --rigid \
-        --y-grid none \
+        --y-grid 1:1 --units-length 5 \
         --tabwidth 60 \
-        DEF:battery=${RRDFILE}:on_battery:AVERAGE \
-        CDEF:line=battery,0.5,LT,1,0,IF \
+        DEF:on_battery=${RRDFILE}:on_battery:AVERAGE \
+        CDEF:battery=on_battery,UN,0,on_battery,IF,0.5,LT,0,1,IF \
+        CDEF:line=on_battery,0.5,LT,1,0,IF \
         LINE:line#${color3}:"Line\n" \
         AREA:line#${color3}50 \
         LINE:battery#${color1}:"Battery" \

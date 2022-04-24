@@ -34,7 +34,8 @@ exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
         --title "UPS ${ups}: Line voltage" \
         --vertical-label "Volts" \
         --watermark "${WATERMARK}" \
-        --lower-limit 230 --upper-limit 240 --rigid \
+        --lower-limit 220 --upper-limit 250 --rigid \
+        --units-length 2 \
         --tabwidth 60 \
         COMMENT:"\t  Maximum  Average  Current\n" \
         DEF:IN=${RRDFILE}:input_voltage:AVERAGE \
