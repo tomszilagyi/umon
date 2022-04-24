@@ -9,10 +9,10 @@ shift
 
 case $(uname -s) in
     OpenBSD)
-        export thestats="$(doas smtpctl show stats)"
+        thestats="$(doas smtpctl show stats)"
         ;;
     Linux)
-        export thestats="$(sudo smtpctl show stats)"
+        thestats="$(sudo smtpctl show stats)"
         ;;
     *)
         echo "Unsupported platform: $(uname -s)" >&2

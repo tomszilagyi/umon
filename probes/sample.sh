@@ -48,8 +48,8 @@ probe() {
         return
     fi
 
-    echo "probe name=$name inst=$inst args=$@"
-    ./probes/${name}.sh ${inst} $@ &
+    echo "probe name=$name inst=$inst args=$*"
+    ./probes/${name}.sh ${inst} "$@" &
 }
 
 if ! test -d "${RRDFILES}" ; then

@@ -7,7 +7,7 @@ shift
 . ./umon.conf
 . ./probes/probes.env
 
-export thevms="$(vmstat -s)"
+thevms="$(vmstat -s)"
 
 get() {
     echo "${thevms}" | grep -m 1 "$1" | awk '{print $1}'

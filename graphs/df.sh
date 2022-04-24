@@ -38,7 +38,7 @@ do
     total=$(eval "echo \$total${j}")
     mounted=$(eval "echo \$mounted${j}")
 
-    color_idx=$((j % ${N_STACK_COLORS} + 1))
+    color_idx=$((j % N_STACK_COLORS + 1))
     color=$(echo ${STACK_COLORS} | cut -d: -f${color_idx})
 
     # N.B.: the CDEF of TOTAL$j uses a multiplication by zero

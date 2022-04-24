@@ -45,7 +45,7 @@ fields="evpcache_size bounce_env sched_env smtp_sess"
 SPEC=
 j=0
 for fld in ${fields}; do
-    color_idx=$((j % ${N_STACK_COLORS} + 1))
+    color_idx=$((j % N_STACK_COLORS + 1))
     color=$(echo ${STACK_COLORS} | cut -d: -f${color_idx})
     label=$(getlabel ${fld})
     SPEC="${SPEC} \

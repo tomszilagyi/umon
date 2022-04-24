@@ -41,7 +41,7 @@ getlabel() {
 SPEC=
 j=0
 for cnt in ${counters}; do
-    color_idx=$((j % ${N_STACK_COLORS} + 1))
+    color_idx=$((j % N_STACK_COLORS + 1))
     color=$(echo ${STACK_COLORS} | cut -d: -f${color_idx})
     label=$(getlabel ${cnt})
     SPEC="${SPEC} \

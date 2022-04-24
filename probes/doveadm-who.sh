@@ -9,20 +9,22 @@ shift
 
 case $(uname -s) in
     OpenBSD)
-        export thestats="$(doas doveadm who)"
-        [ $? -ne 0 ] && exit 1
+        if ! thestats="$(doas doveadm who)" ; then
+            exit 1
+        fi
         ;;
     Linux)
-        export thestats="$(sudo doveadm who)"
-        [ $? -ne 0 ] && exit 1
+        if ! thestats="$(sudo doveadm who)" ; then
+            exit 1
+        fi
         ;;
     *)
         echo "Unsupported platform: $(uname -s)" >&2
         exit 1
 esac
 
-awks='BEGIN { ci=0; cm=0; } \
-      { if ($3 == "imap") { ci = ci + $2; } else { cm = cm + $2; } } \
+awks='BEGIN { ci=0; cm=0; }
+      { if ($3 == "imap") { ci = ci + $2; } else { cm = cm + $2; } }
       END { printf ("%d %d\n", ci, cm); }'
 counts=$(echo "${thestats}" | tail -n +2 | awk "${awks}")
 
