@@ -7,14 +7,11 @@ UMON_SRCS = \
     LICENSE \
     README \
     Makefile \
+    examples/* \
     fcgi/*.cc \
     fcgi/*.h \
     fcgi/*.sh \
     fcgi/Makefile \
-    graph.conf \
-    probes.conf.example \
-    umon.conf \
-    view.conf.example \
     graphs/*.sh \
     probes/*.sh \
     views/*.sh \

@@ -1,6 +1,6 @@
 #+TITLE: \mu{}Mon - minimal host monitoring
 #+OPTIONS: author:nil timestamp:nil toc:nil num:nil val:nil html-style:nil H:3 ^:{}
-#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="org.css"/>
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="org.css">
 #+HTML_HEAD: <link rel="icon" href="data:,">
 
 #+BEGIN_CENTER
@@ -10,7 +10,7 @@ Homepage: https://tomscii.sig7.se/umon \\
 Source: https://github.com/tomszilagyi/umon
 #+END_CENTER
 
-/\mu{}Mon/ (ascii: =uMon=; pron.: "mu-mon") is a minimal host
+/\mu{}Mon/ (ascii: =uMon=; pron.: /mu-mon/) is a minimal host
 monitoring toolkit based on [[https://oss.oetiker.ch/rrdtool/][RRDtool]] to store, aggregate and graph
 time-series metrics data.  Metrics are collected via SNMP and simple
 shell scripts.
@@ -24,7 +24,7 @@ overview and specific instructions, read the rest of this document.
 OpenBSD, but should be portable to other Unix-like systems with
 minimal hassle.
 
-/\mu{}Mon/ is published under a very permissive BSD license (the same
+/\mu{}Mon/ is published under a permissive BSD license (the same
 flavour that OpenBSD uses).
 
 #+TOC: headlines 3
@@ -61,7 +61,15 @@ Install dependencies:
 : # pkg_add rrdtool socat
 
 Note: =socat= is only needed for running the fcgi as a standalone
-service; for production, usage of =inetd= is recommended.
+service; for production, usage of =inetd= (part of the base system,
+hence no need to install it) is recommended.
+
+Create a copy of =examples/*.conf= to the main /\mu{}Mon/ directory
+(one level up). You do not necessarily need to make changes to all of
+these files, but you are encouraged to look at them. If you decide to
+make changes (now or later), having the upstream version under
+=examples/= will protect you from overwriting your local config in
+case you untar an updated archive on top of your /\mu{}Mon/ instance.
 
 *** Setting up metrics collection
 
@@ -92,9 +100,9 @@ durations ranging from the last 1 hour to the last 2 years. You can
 change these by editing =umon.conf=, but everything should be fine as
 is.
 
-Configure the plugins by copying =probes.conf.example= to =probes.conf=
-and editing it. This should be straightforward, but you might need to
-check your system to know what the appropriate device names are.
+Configure the plugins by editing =probes.conf=. This should be
+straightforward, but you might need to check your system to know what
+the appropriate device names are.
 
 Depending on which probes you have enabled, you might need some or all
 of the below privilege escalations added to =/etc/doas.conf=:
@@ -177,8 +185,7 @@ Make sure you enable and start =inetd= as appropriate:
 : # rcctl start inetd
 
 
-Configure the views you want to access by copying =view.conf.example= to
-=view.conf= and editing it as appropriate.
+Configure the views you want to access by editing =views.conf=.
 
 Navigate your browser to http://your.hostname:8888. The main view
 should load. (Tip: you can read this document by clicking on the
@@ -189,12 +196,12 @@ should load. (Tip: you can read this document by clicking on the
 If you have a new, updated source archive =umon.tar.gz=, you can
 safely untar it on top of your existing installation:
 
-: doas -u _umon /bin/sh -c "cd && tar xzf /path/to/umon.tar.gz"
+: doas -u _umon /bin/sh -c "cd && tar xzf /path/to/umon.tar.gz && make -C fcgi"
 
 Your actual config files will not be overwritten. If there were
 changes made to the example config files, you might want to migrate
-some or all of those to your actual config (=probes.conf=,
-=view.conf=).
+some or all of those to your actual config (=*.conf= in the main
+/\mu{}Mon/ directory).
 
 If there is a change to the RRD format (data series names) produced by
 a probe, reinitialize it by deleting the corresponding RRD file(s)
@@ -220,7 +227,14 @@ Install dependencies:
 : # apt-get install rrdtool socat
 
 Note: =socat= is only needed for running the fcgi as a standalone
-service; for production, usage of =inetd= is recommended.
+service; for production, usage of =xinetd= is recommended.
+
+Create a copy of =examples/*.conf= to the main /\mu{}Mon/ directory
+(one level up). You do not necessarily need to make changes to all of
+these files, but you are encouraged to look at them. If you decide to
+make changes (now or later), having the upstream version under
+=examples/= will protect you from overwriting your local config in
+case you untar an updated archive on top of your /\mu{}Mon/ instance.
 
 *** Setting up metrics collection
 
@@ -245,8 +259,15 @@ $ snmpwalk -O n -v 2c -c public localhost .1.3.6.1.2.1.31.1.1.1.1
 .1.3.6.1.2.1.31.1.1.1.1.2 = STRING: "ens3"
 #+END_EXAMPLE
 
-Create (by copying from the examples) and edit the config files of
-/\mu{}Mon/ as described in the OpenBSD section above.
+By default, RRD databases will be created under =db/=, with
+consolidation functions to yield appropriate granularity on view
+durations ranging from the last 1 hour to the last 2 years. You can
+change these by editing =umon.conf=, but everything should be fine as
+is.
+
+Configure the plugins by editing =probes.conf=. This should be
+straightforward, but you might need to check your system to know what
+the appropriate device names are.
 
 Depending on which probes you have enabled, you might need to delegate
 the privilege of running certain commands (as root) to the =_umon=
@@ -320,8 +341,7 @@ server {
 #+END_EXAMPLE
 
 (If you do not have any webserver installed, just =apt-get install
-nginx= and add the above snippet to
-=/etc/nginx/sites-enabled/default=.
+nginx= and add the above snippet to =/etc/nginx/sites-enabled/default=.
 
 Make sure your changes take effect:
 : systemctl reload nginx
@@ -360,8 +380,7 @@ Don't forget to enable/start =xinetd= as appropriate:
 : # systemctl enable xinetd
 : # systemctl start xinetd
 
-Configure the views you want to access by copying =view.conf.example= to
-=view.conf= and editing it as appropriate.
+Configure the views you want to access by editing =views.conf=.
 
 Navigate your browser to http://your.hostname:8888. The main view
 should load. (Tip: you can read this document by clicking on the
@@ -373,7 +392,7 @@ The same considerations apply as with OpenBSD (see above).
 
 The equivalent update command to use:
 
-: sudo -u _umon /bin/sh -c "cd && tar xzf /path/to/umon.tar.gz"
+: sudo -u _umon /bin/sh -c "cd && tar xzf /path/to/umon.tar.gz && make -C fcgi"
 
 * COMMENT Local variables
 # Local variables:

@@ -1,10 +1,15 @@
 body {
-    width: 900px;
-    margin: 2% auto;
+    max-width: 900px;
+    margin: 0 auto;
     line-height: 1.4em;
     font-family: Georgia,serif;
     font-size: 18px;
     color: #333;
+}
+
+div#content {
+    padding: 1.5em;
+    padding-top: 0;
 }
 
 .subtitle, .title, .org-center {

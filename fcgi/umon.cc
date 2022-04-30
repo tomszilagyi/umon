@@ -262,9 +262,8 @@ function onMenu ()
 
 <div id="nav">
 <form id="menu" action="javascript:;" onsubmit="onMenu()">
-   <a href="/README.html" target="_blank">
-     <img id="logo" src="/umon_logo_white.png">
-   </a>
+   <a href="/README.html" target="_blank"><img
+    id="logo" src="/umon_logo_white.png"></a>
    <label for="view">View:</label>
    <select id="view" name="view" onchange="onMenu()">
 )raw";
@@ -313,7 +312,7 @@ get_views ()
 
    std::vector <std::string> vs;
 
-   std::ifstream conffile ("./view.conf", std::ios::binary);
+   std::ifstream conffile ("./views.conf", std::ios::binary);
 
    while (conffile.good ())
    {
@@ -337,13 +336,13 @@ process_view (const std::string& view)
 
    auto views = get_views ();
    if (views.size () == 0)
-      http_error (500, "No views available, check your view.conf!");
+      http_error (500, "No views available, check your views.conf!");
    else
    {
       auto it = std::find (views.begin (), views.end (), ps [0]);
       if (it == views.end ())
          http_error (404, "The requested view is not available. "
-                     "Hint: check your view.conf!");
+                     "Hint: check your views.conf!");
    }
 
    std::string timespan = timespan_default;
