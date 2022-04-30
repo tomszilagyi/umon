@@ -613,6 +613,12 @@ main (int argc, char** argv)
       }
 
       size_t toRead = contentLength + hdr->paddingLength;
+      if (toRead > bufsize - FCGI_HEADER_LEN)
+      {
+         std::cerr << "Error: illegal request length" << std::endl;
+         exit (1);
+      }
+
       if (read_buf (buf + FCGI_HEADER_LEN, toRead))
          return 0;
 
