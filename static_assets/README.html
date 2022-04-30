@@ -1,0 +1,665 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>&mu;Mon - minimal host monitoring</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="org.css"/>
+<link rel="icon" href="data:,">
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2020 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">&mu;Mon - minimal host monitoring</h1>
+<div class="org-center">
+
+<div class="figure">
+<p><img src="./umon_logo_black.png" alt="umon_logo_black.png" />
+</p>
+</div>
+
+<p>
+Homepage: <a href="https://tomscii.sig7.se/umon">https://tomscii.sig7.se/umon</a> <br />
+Source: <a href="https://github.com/tomszilagyi/umon">https://github.com/tomszilagyi/umon</a>
+</p>
+</div>
+
+<p>
+<i>&mu;Mon</i> (ascii: <code>uMon</code>; pron.: "mu-mon") is a minimal host
+monitoring toolkit based on <a href="https://oss.oetiker.ch/rrdtool/">RRDtool</a> to store, aggregate and graph
+time-series metrics data.  Metrics are collected via SNMP and simple
+shell scripts.
+</p>
+
+<p>
+For a general introduction to <i>&mu;Mon</i>, please read <a href="https://tomscii.sig7.se/2022/04/uMon-stupid-simple-monitoring">this article</a>,
+which tells you the story of why it exists, compares it with existing
+solutions, and exhibits some screenshots. For a more technical
+overview and specific instructions, read the rest of this document.
+</p>
+
+<p>
+<i>&mu;Mon</i> is currently usable under Linux (tested on Debian) and
+OpenBSD, but should be portable to other Unix-like systems with
+minimal hassle.
+</p>
+
+<p>
+<i>&mu;Mon</i> is published under a very permissive BSD license (the same
+flavour that OpenBSD uses).
+</p>
+
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#Installation%20and%20getting%20started">Installation and getting started</a>
+<ul>
+<li><a href="#OpenBSD">OpenBSD</a>
+<ul>
+<li><a href="#Initial%20deployment">Initial deployment</a></li>
+<li><a href="#Setting%20up%20metrics%20collection">Setting up metrics collection</a></li>
+<li><a href="#Setting%20up%20the%20web%20view">Setting up the web view</a></li>
+<li><a href="#Updating%20the%20deployment">Updating the deployment</a></li>
+</ul>
+</li>
+<li><a href="#Linux">Linux</a>
+<ul>
+<li><a href="#Linux--Initial%20deployment">Initial deployment</a></li>
+<li><a href="#Linux--Setting%20up%20metrics%20collection">Setting up metrics collection</a></li>
+<li><a href="#Linux--Setting%20up%20the%20web%20view">Setting up the web view</a></li>
+<li><a href="#Linux--Updating%20the%20deployment">Updating the deployment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-Installation%20and%20getting%20started" class="outline-2">
+<h2 id="Installation%20and%20getting%20started">Installation and getting started</h2>
+<div class="outline-text-2" id="text-Installation%20and%20getting%20started">
+<p>
+Since <i>&mu;Mon</i> is very hands-on and sooner or later you will want to
+change something in its source scripts, it is probably best to clone
+it from git on to some dev machine. This can be your personal laptop,
+a dedicated test (staging) host, etc. On this machine, run <i>&mu;Mon</i>
+directly from the git clone. This allows you to have direct feedback
+on any changes you make and version-control those changes on a local
+branch. When you want to deploy your flavour of <i>&mu;Mon</i> to
+"production" (i.e., your other machines), execute <code>make dist</code> in the
+top-level folder of this checkout. This will create <code>umon.tar.gz</code> that
+is referenced by the below instructions.
+</p>
+</div>
+
+<div id="outline-container-OpenBSD" class="outline-3">
+<h3 id="OpenBSD">OpenBSD</h3>
+<div class="outline-text-3" id="text-OpenBSD">
+</div>
+<div id="outline-container-Initial%20deployment" class="outline-4">
+<h4 id="Initial%20deployment">Initial deployment</h4>
+<div class="outline-text-4" id="text-Initial%20deployment">
+<p>
+Create a dedicated unprivileged user:
+</p>
+
+<pre class="example">
+# useradd -c "uMon" -d /var/umon -s /sbin/nologin -L daemon _umon
+# mkdir /var/umon
+# chown _umon:_umon /var/umon
+</pre>
+
+<p>
+Untar the umon archive to the home directory of this user:
+</p>
+<pre class="example">
+# doas -u _umon /bin/sh -c "cd &amp;&amp; tar xzf /path/to/umon.tar.gz"
+</pre>
+
+
+<p>
+Install dependencies:
+</p>
+<pre class="example">
+# pkg_add rrdtool socat
+</pre>
+
+
+<p>
+Note: <code>socat</code> is only needed for running the fcgi as a standalone
+service; for production, usage of <code>inetd</code> is recommended.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Setting%20up%20metrics%20collection" class="outline-4">
+<h4 id="Setting%20up%20metrics%20collection">Setting up metrics collection</h4>
+<div class="outline-text-4" id="text-Setting%20up%20metrics%20collection">
+<p>
+Configure and enable <code>snmpd</code>:
+</p>
+<pre class="example">
+# cp /etc/examples/snmpd.conf /etc/
+# echo "listen on 127.0.0.1 snmpv2c" &gt;&gt; /etc/snmpd.conf
+# echo "read-only community public" &gt;&gt; /etc/snmpd.conf
+# rcctl enable snmpd
+# rcctl start snmpd
+</pre>
+
+<p>
+Note: you are free (and encouraged) to use a different community string.
+Please set <code>SNMP_COMMUNITY</code> in <code>umon.conf</code> accordingly if you do so.
+</p>
+
+<p>
+Verify that snmp queries work, output should be something similar to below:
+</p>
+<pre class="example">
+$ snmp walk -v 2c -c public localhost ifDescr
+ifDescr.1 = STRING: em0
+ifDescr.2 = STRING: enc0
+ifDescr.3 = STRING: lo0
+ifDescr.4 = STRING: pflog0
+</pre>
+
+<p>
+By default, RRD databases will be created under <code>db/</code>, with
+consolidation functions to yield appropriate granularity on view
+durations ranging from the last 1 hour to the last 2 years. You can
+change these by editing <code>umon.conf</code>, but everything should be fine as
+is.
+</p>
+
+<p>
+Configure the plugins by copying <code>probes.conf.example</code> to <code>probes.conf</code>
+and editing it. This should be straightforward, but you might need to
+check your system to know what the appropriate device names are.
+</p>
+
+<p>
+Depending on which probes you have enabled, you might need some or all
+of the below privilege escalations added to <code>/etc/doas.conf</code>:
+</p>
+<pre class="example">
+# Permit _umon to run query commands
+permit nopass _umon as root cmd doveadm args who
+permit nopass _umon as root cmd smtpctl args show stats
+</pre>
+
+<p>
+Now run <code>probes/sample.sh</code> manually and observe that it creates RRD
+databases without errors:
+</p>
+<pre class="example">
+$ probes/sample.sh
+Creating directory for RRD files: db
+...
+Creating db/load.rrd
+Creating db/df.rrd
+Creating db/cpu.rrd
+Creating db/vmstat.rrd
+...
+</pre>
+
+<p>
+Create a crontab entry for running <code>sample.sh</code> once every minute:
+</p>
+
+<pre class="example">
+$ crontab -l
+# min hr  dom mon dow command
+*   *   *   *   *   /var/umon/probes/sample.sh 2&gt;&amp;1 &gt;/dev/null
+</pre>
+</div>
+</div>
+
+<div id="outline-container-Setting%20up%20the%20web%20view" class="outline-4">
+<h4 id="Setting%20up%20the%20web%20view">Setting up the web view</h4>
+<div class="outline-text-4" id="text-Setting%20up%20the%20web%20view">
+<p>
+Configure <code>httpd</code> by adding this to <code>/etc/httpd.conf</code>:
+</p>
+
+<pre class="example">
+# uMon - rrdtool-based monitoring
+server "default" {
+    listen on * port 8888
+    location "/*" {
+        fastcgi socket tcp 127.0.0.1 3333
+    }
+}
+</pre>
+
+<p>
+Feel free to change the listen address/port appropriately,
+e.g. <code>listen on 127.0.0.1</code> instead of <code>listen on *</code> if you do not wish
+the <i>&mu;Mon</i> webpage to be accessible from the network. In such
+case, you can still access it by setting up an ssh tunnel. Or set up
+http basic auth so only people who know the credentials have access to
+it. Etc.
+</p>
+
+<p>
+Make sure your changes take effect:
+</p>
+<pre class="example">
+# rcctl reload httpd
+</pre>
+
+
+<p>
+Compile the fastcgi server:
+</p>
+<pre class="example">
+make -C fcgi
+</pre>
+
+
+<p>
+This creates the <code>fcgi/umon_fcgi</code> binary executable from its C++ sources.
+</p>
+
+<p>
+If you want to develop the fastcgi server program of <i>&mu;Mon</i>, it is
+convenient to run the server standalone so you can see the stdout in
+the console. You can do that by executing the wrapper script
+<code>fcgi/standalone.sh</code>. This requires <code>socat</code> to be installed. Note: to
+develop or change probes, graphs or views, you do not need to touch
+the fastcgi server, as it only invokes the corresponding shell scripts
+and is itself quite generic. Hence, you most probably want to deploy
+as "normal".
+</p>
+
+<p>
+For normal deployment, you will want to set up <code>inetd</code> to invoke the
+fastcgi server via the <code>fcgi/inetd.sh</code> wrapper. This is convenient for
+development of graphs and views as well, in the sense that nothing has
+to be restarted after rebuilding the <code>umon_fcgi</code> executable; however,
+stderr will go to /dev/null.  Use a config similar to this:
+</p>
+
+<pre class="example">
+# cat /etc/inetd.conf
+127.0.0.1:3333  stream  tcp     nowait  _umon     /var/umon/fcgi/inetd.sh
+</pre>
+
+<p>
+Make sure you enable and start <code>inetd</code> as appropriate:
+</p>
+<pre class="example">
+# rcctl enable inetd
+# rcctl start inetd
+</pre>
+
+
+
+<p>
+Configure the views you want to access by copying <code>view.conf.example</code> to
+<code>view.conf</code> and editing it as appropriate.
+</p>
+
+<p>
+Navigate your browser to <a href="http://your.hostname:8888">http://your.hostname:8888</a>. The main view
+should load. (Tip: you can read this document by clicking on the
+<i>&mu;Mon</i> logo in the navbar!)
+</p>
+</div>
+</div>
+
+<div id="outline-container-Updating%20the%20deployment" class="outline-4">
+<h4 id="Updating%20the%20deployment">Updating the deployment</h4>
+<div class="outline-text-4" id="text-Updating%20the%20deployment">
+<p>
+If you have a new, updated source archive <code>umon.tar.gz</code>, you can
+safely untar it on top of your existing installation:
+</p>
+
+<pre class="example">
+doas -u _umon /bin/sh -c "cd &amp;&amp; tar xzf /path/to/umon.tar.gz"
+</pre>
+
+
+<p>
+Your actual config files will not be overwritten. If there were
+changes made to the example config files, you might want to migrate
+some or all of those to your actual config (<code>probes.conf</code>,
+<code>view.conf</code>).
+</p>
+
+<p>
+If there is a change to the RRD format (data series names) produced by
+a probe, reinitialize it by deleting the corresponding RRD file(s)
+under <code>db/</code> and any probe state files <code>probes/*.env</code> produced by the
+probe (the base name should match the probe).
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Linux" class="outline-3">
+<h3 id="Linux">Linux</h3>
+<div class="outline-text-3" id="text-Linux">
+</div>
+<div id="outline-container-Linux--Initial%20deployment" class="outline-4">
+<h4 id="Linux--Initial%20deployment">Initial deployment</h4>
+<div class="outline-text-4" id="text-Linux--Initial%20deployment">
+<p>
+Create a dedicated unprivileged user:
+</p>
+
+<pre class="example">
+useradd -s /usr/sbin/nologin -r -M -d /var/umon _umon
+mkdir /var/umon
+chown _umon:_umon /var/umon
+</pre>
+
+<p>
+Untar the umon archive to the home directory of this user:
+</p>
+<pre class="example">
+# sudo -u _umon /bin/sh -c "cd &amp;&amp; tar xzf /path/to/umon.tar.gz"
+</pre>
+
+
+<p>
+Install dependencies:
+</p>
+<pre class="example">
+# apt-get install rrdtool socat
+</pre>
+
+
+<p>
+Note: <code>socat</code> is only needed for running the fcgi as a standalone
+service; for production, usage of <code>inetd</code> is recommended.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Linux--Setting%20up%20metrics%20collection" class="outline-4">
+<h4 id="Linux--Setting%20up%20metrics%20collection">Setting up metrics collection</h4>
+<div class="outline-text-4" id="text-Linux--Setting%20up%20metrics%20collection">
+<p>
+Install and configure Net-SNMP:
+</p>
+
+<pre class="example">
+# apt-get install snmp snmpd snmp-mibs-downloader
+</pre>
+
+
+<p>
+Edit <code>/etc/snmp/snmpd.conf</code> and open up access to OIDs by adding a line such as:
+</p>
+
+<pre class="example">
+view   systemonly  included   .1.3.6
+</pre>
+
+
+<p>
+Restart <code>snmpd</code> for the changes to take effect:
+</p>
+<pre class="example">
+# systemctl restart snmpd
+</pre>
+
+
+<p>
+Note: you are free (and encouraged) to use a different community string.
+Please set <code>SNMP_COMMUNITY</code> in <code>umon.conf</code> accordingly if you do so.
+</p>
+
+<p>
+Verify that snmp queries work, output should be something similar to below:
+</p>
+<pre class="example">
+$ snmpwalk -O n -v 2c -c public localhost .1.3.6.1.2.1.31.1.1.1.1
+.1.3.6.1.2.1.31.1.1.1.1.1 = STRING: "lo"
+.1.3.6.1.2.1.31.1.1.1.1.2 = STRING: "ens3"
+</pre>
+
+<p>
+Create (by copying from the examples) and edit the config files of
+<i>&mu;Mon</i> as described in the OpenBSD section above.
+</p>
+
+<p>
+Depending on which probes you have enabled, you might need to delegate
+the privilege of running certain commands (as root) to the <code>_umon</code>
+user. On a stock Linux using <code>sudo</code>, just create <code>/etc/sudoers.d/umon</code>
+with some or all of the below lines:
+</p>
+
+<pre class="example">
+# Permit _umon to run query commands
+_umon   ALL=(root) NOPASSWD: /usr/bin/doveadm
+_umon   ALL=(root) NOPASSWD: /usr/bin/smtpctl
+</pre>
+
+<p>
+Now run <code>probes/sample.sh</code> manually and observe that it creates RRD
+databases without errors:
+</p>
+<pre class="example">
+# sudo -u _umon /bin/bash
+$ cd
+$ probes/sample.sh
+Creating directory for RRD files: db
+...
+Creating db/load.rrd
+Creating db/df.rrd
+Creating db/cpu.rrd
+Creating db/vmstat.rrd
+...
+</pre>
+
+<p>
+Create a crontab entry for running <code>sample.sh</code> once every minute:
+</p>
+
+<pre class="example">
+$ crontab -l
+# min hr  dom mon dow command
+*   *   *   *   *   /var/umon/probes/sample.sh 2&gt;&amp;1 &gt;/dev/null
+</pre>
+
+
+<p>
+If you are collecting or tailing syslog messages as a matter of
+course, you might be annoyed by the nonsensical verbosity of cronjob
+logging, emitting not one but <i>three</i> entries per minute. To stop
+these useless entries from flooding your logs, create
+<code>/etc/rsyslog.d/umon_block.conf</code> with the below content:
+</p>
+
+<pre class="example">
+if $msg contains "pam_unix(cron:session)" or $msg contains "_umon"
+then {
+    stop
+}
+</pre>
+
+<p>
+Do not forget to restart the syslog daemon for this to take effect.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Linux--Setting%20up%20the%20web%20view" class="outline-4">
+<h4 id="Linux--Setting%20up%20the%20web%20view">Setting up the web view</h4>
+<div class="outline-text-4" id="text-Linux--Setting%20up%20the%20web%20view">
+<p>
+The below configuration example applies to <code>nginx</code> on the local host.
+If you use a different webserver or want to access the fastcgi socket
+from a different host, please adapt your config accordingly.
+</p>
+
+<p>
+Merge this snippet into your enabled virtual hosts configs:
+</p>
+
+<pre class="example">
+server {
+    fastcgi_param  CONTENT_LENGTH     $content_length;
+    fastcgi_param  CONTENT_TYPE       $content_type;
+    fastcgi_param  DOCUMENT_URI       $document_uri;
+    fastcgi_param  QUERY_STRING       $query_string;
+    fastcgi_param  REQUEST_METHOD     $request_method;
+    fastcgi_param  REQUEST_URI        $request_uri;
+
+    listen 8888;
+    location / {
+        fastcgi_pass 127.0.0.1:3333;
+    }
+}
+</pre>
+
+<p>
+(If you do not have any webserver installed, just <code>apt-get install
+nginx</code> and add the above snippet to
+<code>/etc/nginx/sites-enabled/default</code>.
+</p>
+
+<p>
+Make sure your changes take effect:
+</p>
+<pre class="example">
+systemctl reload nginx
+</pre>
+
+
+<p>
+Compile the fastcgi server:
+</p>
+<pre class="example">
+make -C fcgi
+</pre>
+
+
+<p>
+Please see above in the equivalent OpenBSD section for a discussion
+on running the fastcgi server for development purposes.
+</p>
+
+<p>
+For normal deployment, you will want to set up <code>xinetd</code> to invoke the
+fastcgi server via the <code>fcgi/inetd.sh</code> wrapper. This is convenient for
+development of graphs and views as well, in the sense that nothing has
+to be restarted after rebuilding the <code>umon_fcgi</code> executable; however,
+stderr will go to /dev/null.
+</p>
+
+<p>
+If you do not yet have it installed, <code>apt-get install xinetd</code>.
+Then, create a file <code>/etc/xinetd.d/umon_fcgi</code> with the below content:
+</p>
+
+<pre class="example">
+service umon_fcgi
+{
+        disable         = no
+        type            = UNLISTED
+        socket_type     = stream
+        protocol        = tcp
+        interface       = 127.0.0.1
+        port            = 3333
+        user            = _umon
+        wait            = no
+        server          = /var/umon/fcgi/inetd.sh
+}
+</pre>
+
+<p>
+Don't forget to enable/start <code>xinetd</code> as appropriate:
+</p>
+<pre class="example">
+# systemctl enable xinetd
+# systemctl start xinetd
+</pre>
+
+
+<p>
+Configure the views you want to access by copying <code>view.conf.example</code> to
+<code>view.conf</code> and editing it as appropriate.
+</p>
+
+<p>
+Navigate your browser to <a href="http://your.hostname:8888">http://your.hostname:8888</a>. The main view
+should load. (Tip: you can read this document by clicking on the
+<i>&mu;Mon</i> logo in the navbar!)
+</p>
+</div>
+</div>
+
+<div id="outline-container-Linux--Updating%20the%20deployment" class="outline-4">
+<h4 id="Linux--Updating%20the%20deployment">Updating the deployment</h4>
+<div class="outline-text-4" id="text-Linux--Updating%20the%20deployment">
+<p>
+The same considerations apply as with OpenBSD (see above).
+</p>
+
+<p>
+The equivalent update command to use:
+</p>
+
+<pre class="example">
+sudo -u _umon /bin/sh -c "cd &amp;&amp; tar xzf /path/to/umon.tar.gz"
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

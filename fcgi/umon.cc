@@ -65,10 +65,12 @@ const std::string timespan_default = "2d";
 const std::unordered_map <std::string, std::string> ctypes =
 {
    {"css",      "text/css"},
+   {"html",     "text/html"},
    {"ico",      "image/x-icon"},
    {"jpeg",     "image/jpeg"},
    {"jpg",      "image/jpeg"},
    {"js",       "application/javascript"},
+   {"org",      "text/plain"},
    {"png",      "image/png"},
    {"txt",      "text/plain"},
 };
@@ -260,7 +262,9 @@ function onMenu ()
 
 <div id="nav">
 <form id="menu" action="javascript:;" onsubmit="onMenu()">
-   <img id="logo" src="/umon_logo_white.png">
+   <a href="/README.html" target="_blank">
+     <img id="logo" src="/umon_logo_white.png">
+   </a>
    <label for="view">View:</label>
    <select id="view" name="view" onchange="onMenu()">
 )raw";

@@ -1,0 +1,82 @@
+body {
+    width: 900px;
+    margin: 2% auto;
+    line-height: 1.4em;
+    font-family: Georgia,serif;
+    font-size: 18px;
+    color: #333;
+}
+
+.subtitle, .title, .org-center {
+    text-align: center;
+}
+
+.title {
+    margin: .8em auto;
+    color: #000;
+}
+
+h1,h2,h3,h4,h5 {
+    color: #a5573e;
+    font-family: Helvetica,sans-serif;
+}
+h1 {
+    font-size: 2em;
+    line-height: 2.2em;
+}
+h2 {
+    font-size: 1.5em;
+    line-height: 1.6em;
+}
+h3 {
+    font-size: 1.3em;
+    line-height: 1.4em;
+}
+h4,h5 {
+    font-size: 1.1em;
+    line-height: 1.2em;
+}
+
+p {
+    margin: 1em auto;
+}
+
+dl,ol,ul {
+    margin: 0 auto;
+}
+
+code,kbd,pre,samp {
+    font-family: monospace;
+}
+
+pre.example {
+    padding: 2px 5px;
+    margin: auto 1px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background: #f7f7f7;
+    font-size: 90%;
+}
+
+:not(pre) > code {
+    padding: 2px 5px;
+    margin: auto 1px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background-clip: padding-box;
+    background: #f7f7f7;
+    font-size: 90%;
+}
+
+a {
+    color: #527d9a;
+    text-decoration: none;
+}
+a:hover {
+    color: #035;
+    border-bottom: 1px dotted;
+    text-decoration: underline;
+}
+a:active, a:hover {
+    outline-width: 0;
+}
