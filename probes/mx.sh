@@ -68,12 +68,12 @@ get() {
 
 mem_q_env=$(get "queue.ram.envelope.size")
 mem_q_msg=$(get "queue.ram.message.size")
-evpcache_size=$(get "queue.evpcache.size")
 bounce_env=$(get "bounce.envelope")
+evpcache_size=$(get "queue.evpcache.size")
 sched_env=$(get "scheduler.envelope")
 smtp_sess=$(get "smtp.session")
 
-gauges="mem_q_env mem_q_msg evpcache_size bounce_env sched_env smtp_sess"
+gauges="mem_q_env mem_q_msg bounce_env evpcache_size sched_env smtp_sess"
 
 ## COUNTERS (only increased, never decreased):
 # queue.bounce
@@ -92,15 +92,15 @@ gauges="mem_q_env mem_q_msg evpcache_size bounce_env sched_env smtp_sess"
 # smtp.session.inet6
 # smtp.session.local
 
-del_ok=$(get "scheduler.delivery.ok")
-del_tf=$(get "scheduler.delivery.tempfail")
 del_pf=$(get "scheduler.delivery.permfail")
+del_tf=$(get "scheduler.delivery.tempfail")
+del_ok=$(get "scheduler.delivery.ok")
 del_loop=$(get "scheduler.delivery.loop")
 env_expire=$(get "scheduler.envelope.expired")
 env_remove=$(get "scheduler.envelope.removed")
 env_bounce=$(get "queue.bounce")
 
-counters="del_ok del_tf del_pf del_loop env_expire env_remove env_bounce"
+counters="del_pf del_tf del_ok del_loop env_expire env_remove env_bounce"
 
 fields="${gauges} ${counters}"
 
@@ -127,13 +127,13 @@ then
     cat <<EOF >> ${state}
 label_mem_q_env=queued_envelopes
 label_mem_q_msg=queued_messages
-label_evpcache_size=envelope_cache_size
 label_bounce_env=bounce_envelopes
+label_evpcache_size=envelope_cache_size
 label_sched_env=scheduled_envelopes
 label_smtp_sess=smtp_client_sessions
-label_del_ok=delivered_ok
-label_del_tf=temp_fail
 label_del_pf=perm_fail
+label_del_tf=temp_fail
+label_del_ok=delivered_ok
 label_del_loop=message_loop
 label_env_expire=expired_envelopes
 label_env_remove=removed_envelopes

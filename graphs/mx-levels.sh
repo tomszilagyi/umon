@@ -40,7 +40,7 @@ getlabel() {
 
 # This is a subset of ${gauges}
 # The rest are displayed by mx-memory.sh
-fields="evpcache_size bounce_env sched_env smtp_sess"
+fields="bounce_env evpcache_size sched_env smtp_sess"
 
 SPEC=
 j=0
