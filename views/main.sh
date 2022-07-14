@@ -36,7 +36,7 @@ probe() {
                     ;;
             esac
             ;;
-        "mx")
+        "smtpd")
             echo "<img src=\"/graph/${name}-rates${params}/${TIMESPAN}\">"
             ;;
         "upsc")

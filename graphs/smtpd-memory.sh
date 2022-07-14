@@ -9,8 +9,8 @@ cd $(dirname $0)/..
 
 echo $0: TIMESPAN=${TIMESPAN} >&2
 
-inst=mx
-state=./probes/mx.env
+inst=smtpd
+state=./probes/smtpd.env
 if [ ! -f $state ]
 then
     echo "state not found, expected: ${state}" >&2
@@ -39,8 +39,8 @@ getlabel() {
 }
 
 # This is a subset of ${gauges}
-# The rest are displayed by mx-memory.sh
-fields="bounce_env evpcache_size sched_env smtp_sess"
+# The rest are displayed by smtpd-levels.sh
+fields="mem_q_env mem_q_msg"
 
 SPEC=
 j=0
@@ -50,18 +50,20 @@ for fld in ${fields}; do
     label=$(getlabel ${fld})
     SPEC="${SPEC} \
           DEF:${fld}=${RRDFILE}:${fld}:AVERAGE \
+          AREA:${fld}#${color}40 \
           LINE:${fld}#${color}:${label}\t \
-          GPRINT:${fld}:MAX:%10.1lf \
-          GPRINT:${fld}:AVERAGE:%10.1lf \
-          GPRINT:${fld}:LAST:%10.1lf\n \
+          GPRINT:${fld}:MAX:%6.2lf%SB \
+          GPRINT:${fld}:AVERAGE:%6.2lf%SB \
+          GPRINT:${fld}:LAST:%6.2lf%SB\n \
          "
     j=$((j + 1))
 done
 
 exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
-        --title "MX levels" \
-        --vertical-label "Count" \
+        --title "SMTPd memory usage" \
+        --vertical-label "Memory (bytes)" \
         --watermark "${WATERMARK}" \
-        --tabwidth 140 \
-        COMMENT:"\t      Maximum     Average     Current\n" \
+        --base 1024 --lower-limit 0 \
+        --tabwidth 120 \
+        COMMENT:"\t   Maximum    Average   Current\n" \
         ${SPEC}

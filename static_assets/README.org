@@ -86,7 +86,7 @@ aspects of the system:
 | =doveadm-who= | dovecot: Number of connected IMAP users          | =doveadm= |               |
 | =if=          | Network interface packets/sec and transfer rates | SNMP      | /<interface>/ |
 | =load=        | System load averages (1, 5 and 15 mins)          | =uptime=  |               |
-| =mx=          | OpenSMTPD statistics                             | =smtpctl= |               |
+| =smtpd=       | OpenSMTPD statistics                             | =smtpctl= |               |
 | =upsc=        | UPS: line voltage, battery charge, load %        | =upsc=    | /<ups-name>/  |
 | =vmstat=      | Virtual memory subsystem statistics              | =vmstat=  |               |
 
@@ -114,7 +114,7 @@ probe if lo
 
 Note that not all supported probes are present. This example is from a
 host that does not run any mail software, so the =doveadm-who= and
-=mx= probes have been omitted. There is no UPS either, so =upsc= is
+=smtpd= probes have been omitted. There is no UPS either, so =upsc= is
 missing as well.
 
 ** Graphs

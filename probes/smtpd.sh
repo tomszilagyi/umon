@@ -118,7 +118,7 @@ do
     data="${data}:${val}"
 done
 
-state=./probes/mx.env
+state=./probes/smtpd.env
 if [ ! -f ${state} ]
 then
     echo "gauges=\"${gauges}\"" >> ${state}

@@ -24,7 +24,7 @@ probe() {
     done
 
     case "${name}" in
-        "mx")
+        "smtpd")
             echo "<img src=\"/graph/${name}-rates${params}/${TIMESPAN}\">"
             echo "<img src=\"/graph/${name}-levels${params}/${TIMESPAN}\">"
             echo "<img src=\"/graph/${name}-memory${params}/${TIMESPAN}\">"

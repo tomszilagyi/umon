@@ -9,8 +9,8 @@ cd $(dirname $0)/..
 
 echo $0: TIMESPAN=${TIMESPAN} >&2
 
-inst=mx
-state=./probes/mx.env
+inst=smtpd
+state=./probes/smtpd.env
 if [ ! -f $state ]
 then
     echo "state not found, expected: ${state}" >&2
@@ -55,7 +55,7 @@ for cnt in ${counters}; do
 done
 
 exec ${RRDTOOL} graph - -a PNG ${RRD_GRAPH_ARGS} \
-        --title "MX rates" \
+        --title "SMTPd rates" \
         --vertical-label "Events per second" \
         --watermark "${WATERMARK}" \
         --tabwidth 140 \
