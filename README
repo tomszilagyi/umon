@@ -5,5 +5,8 @@ If you prefer plaintext, please read static_assets/README.org
 (org-mode, works best in Emacs).
 
 If you prefer the rendered result, open static_assets/README.html in
-your browser. The same document is served by any running uMon fastcgi
-server; just click on the uMon logo in the navbar!
+your browser, or visit https://tomscii.sig7.se/umon where the latest
+version is publicly hosted.
+
+The same document is also served by any running uMon fastCGI server;
+just click on the uMon logo in the navbar!

@@ -73,14 +73,14 @@ Source: <a href="https://github.com/tomszilagyi/umon">https://github.com/tomszil
 </div>
 
 <p>
-<i>&mu;Mon</i> (ascii: <code>uMon</code>; pron.: <i>mu-mon</i>) is a minimal host
+<i>&mu;Mon</i> (ascii: <code>uMon</code>; pron.: <i>micro-mon</i>) is a minimal host
 monitoring toolkit based on <a href="https://oss.oetiker.ch/rrdtool/">RRDtool</a> to store, aggregate and graph
 time-series metrics data.  Metrics are collected via SNMP and simple
 shell scripts.
 </p>
 
 <p>
-For a general introduction to <i>&mu;Mon</i>, please read <a href="https://tomscii.sig7.se/2022/04/uMon-stupid-simple-monitoring">this article</a>,
+For a popular introduction to <i>&mu;Mon</i>, please read <a href="https://tomscii.sig7.se/2022/07/uMon-stupid-simple-monitoring">this article</a>,
 which tells you the story of why it exists, compares it with existing
 solutions, and exhibits some screenshots. For a more technical
 overview and specific instructions, read the rest of this document.
@@ -93,14 +93,22 @@ minimal hassle.
 </p>
 
 <p>
-<i>&mu;Mon</i> is published under a permissive BSD license (the same
-flavour that OpenBSD uses).
+<i>&mu;Mon</i> is published under a permissive BSD license.
 </p>
 
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
+<li><a href="#Overview">Overview</a>
+<ul>
+<li><a href="#%2F%5Cmu%7B%7DMon%2F%20essentials"><i>&mu;Mon</i> essentials</a></li>
+<li><a href="#Probes">Probes</a></li>
+<li><a href="#Graphs">Graphs</a></li>
+<li><a href="#Views">Views</a></li>
+<li><a href="#Extending%20%2F%5Cmu%7B%7DMon%2F">Extending <i>&mu;Mon</i></a></li>
+</ul>
+</li>
 <li><a href="#Installation%20and%20getting%20started">Installation and getting started</a>
 <ul>
 <li><a href="#OpenBSD">OpenBSD</a>
@@ -125,13 +133,315 @@ flavour that OpenBSD uses).
 </div>
 </div>
 
+<div id="outline-container-Overview" class="outline-2">
+<h2 id="Overview">Overview</h2>
+<div class="outline-text-2" id="text-Overview">
+</div>
+<div id="outline-container-%2F%5Cmu%7B%7DMon%2F%20essentials" class="outline-3">
+<h3 id="%2F%5Cmu%7B%7DMon%2F%20essentials"><i>&mu;Mon</i> essentials</h3>
+<div class="outline-text-3" id="text-%2F%5Cmu%7B%7DMon%2F%20essentials">
+<p>
+As opposed to more accomplished (and much more complex) monitoring
+stacks, the overarching architectural principle of <i>&mu;Mon</i> is
+<b>simplicity</b>. This results in some noteworthy properties:
+</p>
+
+<ul class="org-ul">
+<li>From <i>&mu;Mon</i>'s perspective, all hosts are self-contained. Each
+probe gathers metrics directly observed on the local host. Data
+collection does not inherently entail network traffic. There is no
+single point of failure in the monitoring system; as long as a host
+is up, its own metrics will be collected.</li>
+
+<li>There is no central database to run queries against; each probe
+feeds data into a local round-robin archive (an RRDtool database
+file).  Data collection is scheduled by a trivial <code>crontab</code> entry.</li>
+
+<li>As a consequence of self-containment, all hosts run their own
+instance of the <i>&mu;Mon</i> fastCGI handler to serve the web UI. This
+is a small C++ program that accepts input on its <i>stdin</i> and writes
+to its <i>stdout</i> and <i>stderr</i>. This program does <i>not</i> contain any
+networking code. Thus, it must be run via some kind of network
+wrapper. Both <code>socat</code> and <code>(x)inetd</code> work well; the latter is
+recommended for actual usage.</li>
+
+<li>Because everything is local, and RRDtool does all the data series
+aggregation, serving graphs and views is <i>fast</i>. It does not matter
+if you are looking at the last hour or last year of data.</li>
+
+<li>The fastCGI handler must be hooked into a webserver, which might run
+on the same host or a different host. There are obvious implications
+of these choices, none of which concern <i>&mu;Mon</i> itself. See below
+for detailed setup and configuration guidance.</li>
+
+<li>There is no alerting logic, only (scheduled) metrics collection and
+(on-demand) graph generation. <i>&mu;Mon</i> is meant as a lightweight
+solution to robust systems that need not be closely monitored.</li>
+</ul>
+
+<p>
+The downside of this very simple architecture is the lack of a
+"central instance" to upgrade: the <i>&mu;Mon</i> deployment will have to
+be updated on all systems to roll out a change. Also, there is no
+systemic way to collect and display metrics that span multiple hosts,
+short of implementing a single probe on one of the hosts to collect
+and aggregate the data in the desired way.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Probes" class="outline-3">
+<h3 id="Probes">Probes</h3>
+<div class="outline-text-3" id="text-Probes">
+<p>
+<i>&mu;Mon</i> currently offers these probes for monitoring various
+aspects of the system:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">Name</th>
+<th scope="col" class="org-left">Description</th>
+<th scope="col" class="org-left">Source</th>
+<th scope="col" class="org-left">Parameter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>cpu</code></td>
+<td class="org-left">Per-core CPU usage percentages</td>
+<td class="org-left">SNMP</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>df</code></td>
+<td class="org-left">Filesystem utilisation ("disk free")</td>
+<td class="org-left"><code>df</code></td>
+<td class="org-left">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>diskio</code></td>
+<td class="org-left">Block device I/O ops/sec and transfer rates</td>
+<td class="org-left">SNMP</td>
+<td class="org-left"><i>&lt;device&gt;</i></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>doveadm-who</code></td>
+<td class="org-left">dovecot: Number of connected IMAP users</td>
+<td class="org-left"><code>doveadm</code></td>
+<td class="org-left">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>if</code></td>
+<td class="org-left">Network interface packets/sec and transfer rates</td>
+<td class="org-left">SNMP</td>
+<td class="org-left"><i>&lt;interface&gt;</i></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>load</code></td>
+<td class="org-left">System load averages (1, 5 and 15 mins)</td>
+<td class="org-left"><code>uptime</code></td>
+<td class="org-left">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>mx</code></td>
+<td class="org-left">OpenSMTPD statistics</td>
+<td class="org-left"><code>smtpctl</code></td>
+<td class="org-left">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>upsc</code></td>
+<td class="org-left">UPS: line voltage, battery charge, load %</td>
+<td class="org-left"><code>upsc</code></td>
+<td class="org-left"><i>&lt;ups-name&gt;</i></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>vmstat</code></td>
+<td class="org-left">Virtual memory subsystem statistics</td>
+<td class="org-left"><code>vmstat</code></td>
+<td class="org-left">&#xa0;</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+Some probes assume they are run as singletons &#x2013; e.g., it does not
+make sense to have more than one instance of the <code>load</code> probe on any
+system. Other probes must be parameterized for each instance. For
+example, the <code>if</code> probe needs a separate instance for each interface
+to be monitored (and the user must decide which interfaces to
+monitor).
+</p>
+
+<p>
+Configuring <i>what to monitor</i> is as simple as listing all probe
+instances &#x2013; with any necessary parameters &#x2013; in the file
+<code>probe.conf</code>. Here is a simple example:
+</p>
+
+<pre class="example">
+# This is probe.conf - commented lines like this are discarded.
+probe load
+probe cpu
+probe vmstat
+probe df
+probe diskio sda
+probe if ens3
+probe if lo
+</pre>
+
+<p>
+Note that not all supported probes are present. This example is from a
+host that does not run any mail software, so the <code>doveadm-who</code> and
+<code>mx</code> probes have been omitted. There is no UPS either, so <code>upsc</code> is
+missing as well.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Graphs" class="outline-3">
+<h3 id="Graphs">Graphs</h3>
+<div class="outline-text-3" id="text-Graphs">
+<p>
+Each defined probe instance produces and feeds one round-robin archive
+file. This RRA will contain a set of data series (variables). Some
+probes have a hardwired set of variables, such as <code>load</code> (moving
+averages for 1, 5 and 15 minutes) or <code>if</code> (received and transmitted
+bytes and packets on the given network interface). Other probes
+determine the set of variables dynamically, for example <code>cpu</code>
+(depending on the number of cores) or <code>df</code> (depending on the actual
+file systems).
+</p>
+
+<p>
+Graphs are loosely coupled to the probes. They are defined under
+<code>graphs/</code> and use all or a subset of the data series maintained by a
+given probe. The graph is named after the probe, suffixed with a
+specialization if it only displays part of the captured data. For
+example, the <code>cpu</code> graph script creates the CPU utilisation graph
+(there is only one such graph on any system). On the other hand,
+<code>diskio-ops</code> and <code>diskio-xfer</code> are two graphs based on <code>diskio</code> probe
+data, available for each monitored network interface.
+</p>
+
+<p>
+In theory, it would be possible to have graphs that display data from
+multiple probes, but there is no such graph yet.
+</p>
+
+<p>
+Graphs might look at the probe state (environment) to make use of
+dynamically determined information that the probe has stored there,
+such as the names of data series (e.g., in case of <code>df</code>, the actual
+filesystem mount points). They also receive the time span (e.g., to
+display the last 6 hours) as a command line argument, so they invoke
+<code>rrdtool graph</code> with the correct parameter.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Views" class="outline-3">
+<h3 id="Views">Views</h3>
+<div class="outline-text-3" id="text-Views">
+<p>
+The contents of <code>probes.conf</code> inform the view layout as well, by
+getting filtered through the view scripts under <code>views/</code>. For example,
+on the <code>main</code> view, each defined probe instance will generate <i>some</i>
+graph, but (to reduce clutter) not necessarily all the graphs based on
+the probe's data. More specialized views work the opposite way. For
+example, the <code>upsc</code> view will generate <i>all</i> the graphs based on data
+collected by the <code>upsc</code> probe, and no graphs for any of the other
+probes.
+</p>
+
+<p>
+Not all views might make sense for a given probe configuration. If
+there is no <code>upsc</code> probe instance, the <code>upsc</code> view should not be
+offered.  This is something left to be configured by the user. The
+file <code>views.conf</code> should contain the names of views, one per
+line. This would be a good fit for the probe config above:
+</p>
+
+<pre class="example">
+# This is views.conf - commented lines like this are discarded.
+main
+io
+disk
+network
+vmstat
+</pre>
+</div>
+</div>
+
+<div id="outline-container-Extending%20%2F%5Cmu%7B%7DMon%2F" class="outline-3">
+<h3 id="Extending%20%2F%5Cmu%7B%7DMon%2F">Extending <i>&mu;Mon</i></h3>
+<div class="outline-text-3" id="text-Extending%20%2F%5Cmu%7B%7DMon%2F">
+<p>
+Implementing new probes is fairly straightforward based on existing
+ones &#x2013; it is best to clone one that has something in common with the
+new probe to be added: SNMP vs. command-based query; fixed vs. dynamic
+set of data series; etc.. The scripts reside under <code>probes/</code>.
+</p>
+
+<p>
+Probes are permitted to have some persistent state (considered to be
+the probe's <i>environment</i>), which is customarily saved beside the
+probe script in an <code>.env</code> file. For example, the CPU usage probe
+<code>cpu.sh</code> creates <code>cpu.env</code> on its first invocation to store the number
+of cores so it does not have to be queried on every run. If a probe is
+changed in an incompatible way, this <code>.env</code> file must be deleted
+together with the RRA so the probe can start with a clear state.
+</p>
+
+<p>
+Depending on the probe, its data will be displayed on one or more
+graphs. Creating these graphs is mostly copy-paste based on existing
+ones, with some trial and error to make the output graphs of <code>rrdtool</code>
+look good.  The new graphs will have to be added to some existing
+views (chiefly the <code>main</code> view), with possibly a bespoke (thematic)
+view created to display all of them.
+</p>
+
+<p>
+This sounds like more hassle than it actually is, but it is more or
+less only cloning and light adaptation of some small shell scripts,
+not a "serious" programming activity. As a plus, the fastCGI handler
+(and its network wrapper, e.g. <code>xinetd</code>) does not have to be restarted
+during development. Changes made to any of the shell scripts are
+immediately effective (on the next sample for probes, and on the next
+page load for graphs and views).
+</p>
+</div>
+</div>
+</div>
+
 <div id="outline-container-Installation%20and%20getting%20started" class="outline-2">
 <h2 id="Installation%20and%20getting%20started">Installation and getting started</h2>
 <div class="outline-text-2" id="text-Installation%20and%20getting%20started">
 <p>
 Since <i>&mu;Mon</i> is very hands-on and sooner or later you will want to
 change something in its source scripts, it is probably best to clone
-it from git on to some dev machine. This can be your personal laptop,
+it from git onto some dev machine. This can be your personal laptop,
 a dedicated test (staging) host, etc. On this machine, run <i>&mu;Mon</i>
 directly from the git clone. This allows you to have direct feedback
 on any changes you make and version-control those changes on a local
@@ -308,7 +618,7 @@ Make sure your changes take effect:
 
 
 <p>
-Compile the fastcgi server:
+Compile the fastCGI server:
 </p>
 <pre class="example">
 make -C fcgi
@@ -320,22 +630,22 @@ This creates the <code>fcgi/umon_fcgi</code> binary executable from its C++ sour
 </p>
 
 <p>
-If you want to develop the fastcgi server program of <i>&mu;Mon</i>, it is
-convenient to run the server standalone so you can see the stdout in
+If you want to develop the fastCGI server program of <i>&mu;Mon</i>, it is
+convenient to run the server standalone so you can see the <i>stdout</i> in
 the console. You can do that by executing the wrapper script
 <code>fcgi/standalone.sh</code>. This requires <code>socat</code> to be installed. Note: to
 develop or change probes, graphs or views, you do not need to touch
-the fastcgi server, as it only invokes the corresponding shell scripts
+the fastCGI server, as it only invokes the corresponding shell scripts
 and is itself quite generic. Hence, you most probably want to deploy
 as "normal".
 </p>
 
 <p>
 For normal deployment, you will want to set up <code>inetd</code> to invoke the
-fastcgi server via the <code>fcgi/inetd.sh</code> wrapper. This is convenient for
+fastCGI server via the <code>fcgi/inetd.sh</code> wrapper. This is convenient for
 development of graphs and views as well, in the sense that nothing has
 to be restarted after rebuilding the <code>umon_fcgi</code> executable; however,
-stderr will go to /dev/null.  Use a config similar to this:
+<i>stderr</i> will go to <code>/dev/null</code>.  Use a config similar to this:
 </p>
 
 <pre class="example">
@@ -568,7 +878,7 @@ Do not forget to restart the syslog daemon for this to take effect.
 <div class="outline-text-4" id="text-Linux--Setting%20up%20the%20web%20view">
 <p>
 The below configuration example applies to <code>nginx</code> on the local host.
-If you use a different webserver or want to access the fastcgi socket
+If you use a different webserver or want to access the fastCGI socket
 from a different host, please adapt your config accordingly.
 </p>
 
@@ -594,7 +904,7 @@ server {
 
 <p>
 (If you do not have any webserver installed, just <code>apt-get install
-nginx</code> and add the above snippet to <code>/etc/nginx/sites-enabled/default</code>.
+nginx</code> and add the above snippet to <code>/etc/nginx/sites-enabled/default</code>.)
 </p>
 
 <p>
@@ -606,7 +916,7 @@ systemctl reload nginx
 
 
 <p>
-Compile the fastcgi server:
+Compile the fastCGI server:
 </p>
 <pre class="example">
 make -C fcgi
@@ -615,15 +925,15 @@ make -C fcgi
 
 <p>
 Please see above in the equivalent OpenBSD section for a discussion
-on running the fastcgi server for development purposes.
+on running the fastCGI server for development purposes.
 </p>
 
 <p>
 For normal deployment, you will want to set up <code>xinetd</code> to invoke the
-fastcgi server via the <code>fcgi/inetd.sh</code> wrapper. This is convenient for
+fastCGI server via the <code>fcgi/inetd.sh</code> wrapper. This is convenient for
 development of graphs and views as well, in the sense that nothing has
 to be restarted after rebuilding the <code>umon_fcgi</code> executable; however,
-stderr will go to /dev/null.
+<i>stderr</i> will go to <code>/dev/null</code>.
 </p>
 
 <p>
@@ -660,7 +970,7 @@ Configure the views you want to access by editing <code>views.conf</code>.
 </p>
 
 <p>
-Navigate your browser to <a href="http://your.hostname:8888">http://your.hostname:8888</a>. The main view
+Navigate your browser to <a href="http://your-hostname:8888">http://your-hostname:8888</a>. The main view
 should load. (Tip: you can read this document by clicking on the
 <i>&mu;Mon</i> logo in the navbar!)
 </p>

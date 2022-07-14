@@ -10,12 +10,12 @@ Homepage: https://tomscii.sig7.se/umon \\
 Source: https://github.com/tomszilagyi/umon
 #+END_CENTER
 
-/\mu{}Mon/ (ascii: =uMon=; pron.: /mu-mon/) is a minimal host
+/\mu{}Mon/ (ascii: =uMon=; pron.: /micro-mon/) is a minimal host
 monitoring toolkit based on [[https://oss.oetiker.ch/rrdtool/][RRDtool]] to store, aggregate and graph
 time-series metrics data.  Metrics are collected via SNMP and simple
 shell scripts.
 
-For a general introduction to /\mu{}Mon/, please read [[https://tomscii.sig7.se/2022/04/uMon-stupid-simple-monitoring][this article]],
+For a popular introduction to /\mu{}Mon/, please read [[https://tomscii.sig7.se/2022/07/uMon-stupid-simple-monitoring][this article]],
 which tells you the story of why it exists, compares it with existing
 solutions, and exhibits some screenshots. For a more technical
 overview and specific instructions, read the rest of this document.
@@ -24,16 +24,190 @@ overview and specific instructions, read the rest of this document.
 OpenBSD, but should be portable to other Unix-like systems with
 minimal hassle.
 
-/\mu{}Mon/ is published under a permissive BSD license (the same
-flavour that OpenBSD uses).
+/\mu{}Mon/ is published under a permissive BSD license.
 
 #+TOC: headlines 3
+
+* Overview
+** /\mu{}Mon/ essentials
+
+As opposed to more accomplished (and much more complex) monitoring
+stacks, the overarching architectural principle of /\mu{}Mon/ is
+*simplicity*. This results in some noteworthy properties:
+
+- From /\mu{}Mon/'s perspective, all hosts are self-contained. Each
+  probe gathers metrics directly observed on the local host. Data
+  collection does not inherently entail network traffic. There is no
+  single point of failure in the monitoring system; as long as a host
+  is up, its own metrics will be collected.
+
+- There is no central database to run queries against; each probe
+  feeds data into a local round-robin archive (an RRDtool database
+  file).  Data collection is scheduled by a trivial =crontab= entry.
+
+- As a consequence of self-containment, all hosts run their own
+  instance of the /\mu{}Mon/ fastCGI handler to serve the web UI. This
+  is a small C++ program that accepts input on its /stdin/ and writes
+  to its /stdout/ and /stderr/. This program does /not/ contain any
+  networking code. Thus, it must be run via some kind of network
+  wrapper. Both =socat= and =(x)inetd= work well; the latter is
+  recommended for actual usage.
+
+- Because everything is local, and RRDtool does all the data series
+  aggregation, serving graphs and views is /fast/. It does not matter
+  if you are looking at the last hour or last year of data.
+
+- The fastCGI handler must be hooked into a webserver, which might run
+  on the same host or a different host. There are obvious implications
+  of these choices, none of which concern /\mu{}Mon/ itself. See below
+  for detailed setup and configuration guidance.
+
+- There is no alerting logic, only (scheduled) metrics collection and
+  (on-demand) graph generation. /\mu{}Mon/ is meant as a lightweight
+  solution to robust systems that need not be closely monitored.
+
+The downside of this very simple architecture is the lack of a
+"central instance" to upgrade: the /\mu{}Mon/ deployment will have to
+be updated on all systems to roll out a change. Also, there is no
+systemic way to collect and display metrics that span multiple hosts,
+short of implementing a single probe on one of the hosts to collect
+and aggregate the data in the desired way.
+
+** Probes
+
+/\mu{}Mon/ currently offers these probes for monitoring various
+aspects of the system:
+
+| Name          | Description                                      | Source    | Parameter     |
+|---------------+--------------------------------------------------+-----------+---------------|
+| =cpu=         | Per-core CPU usage percentages                   | SNMP      |               |
+| =df=          | Filesystem utilisation ("disk free")             | =df=      |               |
+| =diskio=      | Block device I/O ops/sec and transfer rates      | SNMP      | /<device>/    |
+| =doveadm-who= | dovecot: Number of connected IMAP users          | =doveadm= |               |
+| =if=          | Network interface packets/sec and transfer rates | SNMP      | /<interface>/ |
+| =load=        | System load averages (1, 5 and 15 mins)          | =uptime=  |               |
+| =mx=          | OpenSMTPD statistics                             | =smtpctl= |               |
+| =upsc=        | UPS: line voltage, battery charge, load %        | =upsc=    | /<ups-name>/  |
+| =vmstat=      | Virtual memory subsystem statistics              | =vmstat=  |               |
+
+Some probes assume they are run as singletons -- e.g., it does not
+make sense to have more than one instance of the =load= probe on any
+system. Other probes must be parameterized for each instance. For
+example, the =if= probe needs a separate instance for each interface
+to be monitored (and the user must decide which interfaces to
+monitor).
+
+Configuring /what to monitor/ is as simple as listing all probe
+instances -- with any necessary parameters -- in the file
+=probe.conf=. Here is a simple example:
+
+#+BEGIN_EXAMPLE
+# This is probe.conf - commented lines like this are discarded.
+probe load
+probe cpu
+probe vmstat
+probe df
+probe diskio sda
+probe if ens3
+probe if lo
+#+END_EXAMPLE
+
+Note that not all supported probes are present. This example is from a
+host that does not run any mail software, so the =doveadm-who= and
+=mx= probes have been omitted. There is no UPS either, so =upsc= is
+missing as well.
+
+** Graphs
+
+Each defined probe instance produces and feeds one round-robin archive
+file. This RRA will contain a set of data series (variables). Some
+probes have a hardwired set of variables, such as =load= (moving
+averages for 1, 5 and 15 minutes) or =if= (received and transmitted
+bytes and packets on the given network interface). Other probes
+determine the set of variables dynamically, for example =cpu=
+(depending on the number of cores) or =df= (depending on the actual
+file systems).
+
+Graphs are loosely coupled to the probes. They are defined under
+=graphs/= and use all or a subset of the data series maintained by a
+given probe. The graph is named after the probe, suffixed with a
+specialization if it only displays part of the captured data. For
+example, the =cpu= graph script creates the CPU utilisation graph
+(there is only one such graph on any system). On the other hand,
+=diskio-ops= and =diskio-xfer= are two graphs based on =diskio= probe
+data, available for each monitored network interface.
+
+In theory, it would be possible to have graphs that display data from
+multiple probes, but there is no such graph yet.
+
+Graphs might look at the probe state (environment) to make use of
+dynamically determined information that the probe has stored there,
+such as the names of data series (e.g., in case of =df=, the actual
+filesystem mount points). They also receive the time span (e.g., to
+display the last 6 hours) as a command line argument, so they invoke
+=rrdtool graph= with the correct parameter.
+
+** Views
+
+The contents of =probes.conf= inform the view layout as well, by
+getting filtered through the view scripts under =views/=. For example,
+on the =main= view, each defined probe instance will generate /some/
+graph, but (to reduce clutter) not necessarily all the graphs based on
+the probe's data. More specialized views work the opposite way. For
+example, the =upsc= view will generate /all/ the graphs based on data
+collected by the =upsc= probe, and no graphs for any of the other
+probes.
+
+Not all views might make sense for a given probe configuration. If
+there is no =upsc= probe instance, the =upsc= view should not be
+offered.  This is something left to be configured by the user. The
+file =views.conf= should contain the names of views, one per
+line. This would be a good fit for the probe config above:
+
+#+BEGIN_EXAMPLE
+# This is views.conf - commented lines like this are discarded.
+main
+io
+disk
+network
+vmstat
+#+END_EXAMPLE
+
+** Extending /\mu{}Mon/
+
+Implementing new probes is fairly straightforward based on existing
+ones -- it is best to clone one that has something in common with the
+new probe to be added: SNMP vs. command-based query; fixed vs. dynamic
+set of data series; etc.. The scripts reside under =probes/=.
+
+Probes are permitted to have some persistent state (considered to be
+the probe's /environment/), which is customarily saved beside the
+probe script in an =.env= file. For example, the CPU usage probe
+=cpu.sh= creates =cpu.env= on its first invocation to store the number
+of cores so it does not have to be queried on every run. If a probe is
+changed in an incompatible way, this =.env= file must be deleted
+together with the RRA so the probe can start with a clear state.
+
+Depending on the probe, its data will be displayed on one or more
+graphs. Creating these graphs is mostly copy-paste based on existing
+ones, with some trial and error to make the output graphs of =rrdtool=
+look good.  The new graphs will have to be added to some existing
+views (chiefly the =main= view), with possibly a bespoke (thematic)
+view created to display all of them.
+
+This sounds like more hassle than it actually is, but it is more or
+less only cloning and light adaptation of some small shell scripts,
+not a "serious" programming activity. As a plus, the fastCGI handler
+(and its network wrapper, e.g. =xinetd=) does not have to be restarted
+during development. Changes made to any of the shell scripts are
+immediately effective (on the next sample for probes, and on the next
+page load for graphs and views).
 
 * Installation and getting started
 
 Since /\mu{}Mon/ is very hands-on and sooner or later you will want to
 change something in its source scripts, it is probably best to clone
-it from git on to some dev machine. This can be your personal laptop,
+it from git onto some dev machine. This can be your personal laptop,
 a dedicated test (staging) host, etc. On this machine, run /\mu{}Mon/
 directly from the git clone. This allows you to have direct feedback
 on any changes you make and version-control those changes on a local
@@ -155,25 +329,25 @@ it. Etc.
 Make sure your changes take effect:
 : # rcctl reload httpd
 
-Compile the fastcgi server:
+Compile the fastCGI server:
 : make -C fcgi
 
 This creates the =fcgi/umon_fcgi= binary executable from its C++ sources.
 
-If you want to develop the fastcgi server program of /\mu{}Mon/, it is
-convenient to run the server standalone so you can see the stdout in
+If you want to develop the fastCGI server program of /\mu{}Mon/, it is
+convenient to run the server standalone so you can see the /stdout/ in
 the console. You can do that by executing the wrapper script
 =fcgi/standalone.sh=. This requires =socat= to be installed. Note: to
 develop or change probes, graphs or views, you do not need to touch
-the fastcgi server, as it only invokes the corresponding shell scripts
+the fastCGI server, as it only invokes the corresponding shell scripts
 and is itself quite generic. Hence, you most probably want to deploy
 as "normal".
 
 For normal deployment, you will want to set up =inetd= to invoke the
-fastcgi server via the =fcgi/inetd.sh= wrapper. This is convenient for
+fastCGI server via the =fcgi/inetd.sh= wrapper. This is convenient for
 development of graphs and views as well, in the sense that nothing has
 to be restarted after rebuilding the =umon_fcgi= executable; however,
-stderr will go to /dev/null.  Use a config similar to this:
+/stderr/ will go to =/dev/null=.  Use a config similar to this:
 
 #+BEGIN_EXAMPLE
 # cat /etc/inetd.conf
@@ -319,7 +493,7 @@ Do not forget to restart the syslog daemon for this to take effect.
 *** Setting up the web view
 
 The below configuration example applies to =nginx= on the local host.
-If you use a different webserver or want to access the fastcgi socket
+If you use a different webserver or want to access the fastCGI socket
 from a different host, please adapt your config accordingly.
 
 Merge this snippet into your enabled virtual hosts configs:
@@ -341,22 +515,22 @@ server {
 #+END_EXAMPLE
 
 (If you do not have any webserver installed, just =apt-get install
-nginx= and add the above snippet to =/etc/nginx/sites-enabled/default=.
+nginx= and add the above snippet to =/etc/nginx/sites-enabled/default=.)
 
 Make sure your changes take effect:
 : systemctl reload nginx
 
-Compile the fastcgi server:
+Compile the fastCGI server:
 : make -C fcgi
 
 Please see above in the equivalent OpenBSD section for a discussion
-on running the fastcgi server for development purposes.
+on running the fastCGI server for development purposes.
 
 For normal deployment, you will want to set up =xinetd= to invoke the
-fastcgi server via the =fcgi/inetd.sh= wrapper. This is convenient for
+fastCGI server via the =fcgi/inetd.sh= wrapper. This is convenient for
 development of graphs and views as well, in the sense that nothing has
 to be restarted after rebuilding the =umon_fcgi= executable; however,
-stderr will go to /dev/null.
+/stderr/ will go to =/dev/null=.
 
 If you do not yet have it installed, =apt-get install xinetd=.
 Then, create a file =/etc/xinetd.d/umon_fcgi= with the below content:
@@ -382,7 +556,7 @@ Don't forget to enable/start =xinetd= as appropriate:
 
 Configure the views you want to access by editing =views.conf=.
 
-Navigate your browser to http://your.hostname:8888. The main view
+Navigate your browser to [[http://your-hostname:8888]]. The main view
 should load. (Tip: you can read this document by clicking on the
 /\mu{}Mon/ logo in the navbar!)
 
